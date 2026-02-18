@@ -31,7 +31,7 @@ class BWWPTimeDescription(TimeEntityDescription):
 TIME_DESCRIPTIONS: tuple[BWWPTimeDescription, ...] = (
     BWWPTimeDescription(
         key="start_time_control",
-        name="Startzeit",
+        translation_key="start_time_control",
         icon="mdi:clock-start",
         entity_category=EntityCategory.CONFIG,
         hour_register=8,
@@ -41,7 +41,7 @@ TIME_DESCRIPTIONS: tuple[BWWPTimeDescription, ...] = (
     ),
     BWWPTimeDescription(
         key="stop_time_control",
-        name="Endzeit",
+        translation_key="stop_time_control",
         icon="mdi:clock-end",
         entity_category=EntityCategory.CONFIG,
         hour_register=10,
@@ -77,7 +77,6 @@ class BWWPTime(BWWPBaseEntity, TimeEntity):
     ) -> None:
         super().__init__(runtime.coordinator, entry, description.key)
         self.entity_description = description
-        self._attr_name = description.name
         self._hub = runtime.hub
 
     @property

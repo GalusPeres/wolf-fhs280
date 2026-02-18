@@ -35,7 +35,7 @@ class BWWPSelectDescription(SelectEntityDescription):
 SELECT_DESCRIPTIONS: tuple[BWWPSelectDescription, ...] = (
     BWWPSelectDescription(
         key="betriebsart_control",
-        name="Betriebsart",
+        translation_key="betriebsart_control",
         icon="mdi:cog-transfer",
         entity_category=EntityCategory.CONFIG,
         options=tuple(BETRIEBSART_OPTIONS.values()),
@@ -45,7 +45,7 @@ SELECT_DESCRIPTIONS: tuple[BWWPSelectDescription, ...] = (
     ),
     BWWPSelectDescription(
         key="legionellen_control",
-        name="Legionellen",
+        translation_key="legionellen_control",
         icon="mdi:bacteria-outline",
         entity_category=EntityCategory.CONFIG,
         options=tuple(LEGIONELLEN_OPTIONS.values()),
@@ -55,7 +55,7 @@ SELECT_DESCRIPTIONS: tuple[BWWPSelectDescription, ...] = (
     ),
     BWWPSelectDescription(
         key="pv_modus_control",
-        name="PV Modus",
+        translation_key="pv_modus_control",
         icon="mdi:solar-power-variant-outline",
         entity_category=EntityCategory.CONFIG,
         options=tuple(PV_MODUS_OPTIONS.values()),
@@ -65,7 +65,7 @@ SELECT_DESCRIPTIONS: tuple[BWWPSelectDescription, ...] = (
     ),
     BWWPSelectDescription(
         key="ferien_control",
-        name="Ferienmodus",
+        translation_key="ferien_control",
         icon="mdi:beach",
         entity_category=EntityCategory.CONFIG,
         options=tuple(FERIEN_OPTIONS.values()),
@@ -102,7 +102,6 @@ class BWWPSelect(BWWPBaseEntity, SelectEntity):
     ) -> None:
         super().__init__(runtime.coordinator, entry, description.key)
         self.entity_description = description
-        self._attr_name = description.name
         self._hub = runtime.hub
 
     @property

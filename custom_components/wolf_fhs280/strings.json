@@ -37,5 +37,140 @@
       "hub_not_found": "Modbus hub not found in configuration.yaml",
       "unknown": "Unexpected error"
     }
+  },
+  "entity": {
+    "number": {
+      "setpoint_control": {
+        "name": "Setpoint temperature"
+      },
+      "t_min_control": {
+        "name": "T min"
+      },
+      "t2_min_control": {
+        "name": "T2 min"
+      },
+      "abwesenheitstage_control": {
+        "name": "Away days"
+      }
+    },
+    "time": {
+      "start_time_control": {
+        "name": "Start time"
+      },
+      "stop_time_control": {
+        "name": "End time"
+      }
+    },
+    "switch": {
+      "timer_control": {
+        "name": "Schedule"
+      },
+      "boost_control": {
+        "name": "Boost"
+      }
+    },
+    "button": {
+      "sync_device_clock": {
+        "name": "Sync device clock"
+      }
+    },
+    "sensor": {
+      "t_pv_wp": {
+        "name": "PV heat pump temperature"
+      },
+      "t_pv_el": {
+        "name": "PV heating rod temperature"
+      },
+      "legionellen_tage": {
+        "name": "Legionella days"
+      },
+      "t_max": {
+        "name": "Maximum temperature"
+      },
+      "t1": {
+        "name": "Evaporator temperature"
+      },
+      "t2": {
+        "name": "Tank temperature"
+      },
+      "kompressor": {
+        "name": "Compressor",
+        "state": {
+          "Aus": "Off",
+          "An": "On",
+          "Unknown": "Unknown"
+        }
+      },
+      "heizstab": {
+        "name": "Heating rod",
+        "state": {
+          "Aus": "Off",
+          "An": "On",
+          "Unknown": "Unknown"
+        }
+      },
+      "betriebsstatus": {
+        "name": "Operating status",
+        "state": {
+          "Aus": "Off",
+          "W\u00e4rmepumpe": "Heat pump",
+          "Heizstab": "Heating rod",
+          "W\u00e4rmepumpe + Heizstab": "Heat pump + heating rod",
+          "Unknown": "Unknown"
+        }
+      },
+      "device_time": {
+        "name": "Device clock"
+      },
+      "ventilator": {
+        "name": "Fan",
+        "state": {
+          "Niedrig": "Low",
+          "Hoch": "High",
+          "Unknown": "Unknown"
+        }
+      }
+    },
+    "select": {
+      "betriebsart_control": {
+        "name": "Operating mode",
+        "state": {
+          "Aus": "Off",
+          "W\u00e4rmepumpe": "Heat pump",
+          "Heizstab": "Heating rod",
+          "W\u00e4rmepumpe + Heizstab": "Heat pump + heating rod",
+          "Boiler": "Boiler",
+          "W\u00e4rmepumpe + Boiler": "Heat pump + boiler"
+        }
+      },
+      "legionellen_control": {
+        "name": "Legionella",
+        "state": {
+          "Aus": "Off",
+          "60C": "60C",
+          "65C": "65C"
+        }
+      },
+      "pv_modus_control": {
+        "name": "PV mode",
+        "state": {
+          "Aus": "Off",
+          "W\u00e4rmepumpe": "Heat pump",
+          "Heizstab": "Heating rod",
+          "Heizstab + W\u00e4rmepumpe": "Heating rod + heat pump"
+        }
+      },
+      "ferien_control": {
+        "name": "Holiday mode",
+        "state": {
+          "Aus": "Off",
+          "1 Woche": "1 week",
+          "2 Wochen": "2 weeks",
+          "3 Wochen": "3 weeks",
+          "3 Tage": "3 days",
+          "Manuell": "Manual"
+        }
+      }
+    }
   }
 }

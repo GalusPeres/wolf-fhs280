@@ -29,69 +29,69 @@ class BWWPSensorDescription(SensorEntityDescription):
 SENSORS: tuple[BWWPSensorDescription, ...] = (
     BWWPSensorDescription(
         key="t_pv_wp",
-        name="Temperatur PV WP",
+        translation_key="t_pv_wp",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BWWPSensorDescription(
         key="t_pv_el",
-        name="Temperatur PV Heizstab",
+        translation_key="t_pv_el",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BWWPSensorDescription(
         key="legionellen_tage",
-        name="Legionellen Tage",
+        translation_key="legionellen_tage",
         native_unit_of_measurement=UnitOfTime.DAYS,
     ),
     BWWPSensorDescription(
         key="t_max",
-        name="Temperatur max",
+        translation_key="t_max",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BWWPSensorDescription(
         key="t1",
-        name="Verdampfertemperatur",
+        translation_key="t1",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BWWPSensorDescription(
         key="t2",
-        name="Speichertemperatur",
+        translation_key="t2",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BWWPSensorDescription(
         key="kompressor",
-        name="Kompressor",
+        translation_key="kompressor",
         icon="mdi:engine-outline",
     ),
     BWWPSensorDescription(
         key="heizstab",
-        name="Heizstab",
+        translation_key="heizstab",
         icon="mdi:radiator",
     ),
     BWWPSensorDescription(
         key="betriebsstatus",
-        name="Betriebsstatus",
+        translation_key="betriebsstatus",
         icon="mdi:heat-pump-outline",
     ),
     BWWPSensorDescription(
         key="device_time",
-        name="Ger\u00e4teuhrzeit",
+        translation_key="device_time",
         icon="mdi:clock-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     BWWPSensorDescription(
         key="ventilator",
-        name="Ventilator",
+        translation_key="ventilator",
         icon="mdi:fan",
     ),
 )
@@ -120,7 +120,6 @@ class BWWPSensor(BWWPBaseEntity, SensorEntity):
     ) -> None:
         super().__init__(runtime.coordinator, entry, description.key)
         self.entity_description = description
-        self._attr_name = description.name
 
     @property
     def native_value(self):

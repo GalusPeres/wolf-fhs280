@@ -29,7 +29,7 @@ class BWWPButtonDescription(ButtonEntityDescription):
 BUTTON_DESCRIPTIONS: tuple[BWWPButtonDescription, ...] = (
     BWWPButtonDescription(
         key="sync_device_clock",
-        name="Uhrzeit synchronisieren",
+        translation_key="sync_device_clock",
         icon="mdi:clock-sync",
         entity_category=EntityCategory.CONFIG,
         hour_register=105,
@@ -63,7 +63,6 @@ class BWWPButton(BWWPBaseEntity, ButtonEntity):
     ) -> None:
         super().__init__(runtime.coordinator, entry, description.key)
         self.entity_description = description
-        self._attr_name = description.name
         self._hub = runtime.hub
 
     async def async_press(self) -> None:

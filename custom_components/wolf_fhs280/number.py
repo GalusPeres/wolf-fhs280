@@ -33,7 +33,7 @@ class BWWPNumberDescription(NumberEntityDescription):
 NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     BWWPNumberDescription(
         key="setpoint_control",
-        name="Soll Temperatur",
+        translation_key="setpoint_control",
         icon="mdi:thermometer-chevron-up",
         entity_category=EntityCategory.CONFIG,
         native_min_value=SETPOINT_MIN_C,
@@ -45,7 +45,7 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     ),
     BWWPNumberDescription(
         key="t_min_control",
-        name="T min",
+        translation_key="t_min_control",
         icon="mdi:thermometer-low",
         entity_category=EntityCategory.CONFIG,
         native_min_value=20,
@@ -57,7 +57,7 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     ),
     BWWPNumberDescription(
         key="t2_min_control",
-        name="T2 min",
+        translation_key="t2_min_control",
         icon="mdi:thermometer-low",
         entity_category=EntityCategory.CONFIG,
         native_min_value=20,
@@ -69,7 +69,7 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     ),
     BWWPNumberDescription(
         key="abwesenheitstage_control",
-        name="Abwesenheitstage",
+        translation_key="abwesenheitstage_control",
         icon="mdi:calendar-edit",
         entity_category=EntityCategory.CONFIG,
         native_min_value=0,
@@ -108,7 +108,6 @@ class BWWPNumber(BWWPBaseEntity, NumberEntity):
     ) -> None:
         super().__init__(runtime.coordinator, entry, description.key)
         self.entity_description = description
-        self._attr_name = description.name
         self._attr_mode = NumberMode.BOX
         self._attr_suggested_display_precision = 0
         self._hub = runtime.hub

@@ -28,7 +28,7 @@ class BWWPSwitchDescription(SwitchEntityDescription):
 SWITCH_DESCRIPTIONS: tuple[BWWPSwitchDescription, ...] = (
     BWWPSwitchDescription(
         key="timer_control",
-        name="Zeitprogramm",
+        translation_key="timer_control",
         icon="mdi:timer-outline",
         entity_category=EntityCategory.CONFIG,
         register=7,
@@ -36,7 +36,7 @@ SWITCH_DESCRIPTIONS: tuple[BWWPSwitchDescription, ...] = (
     ),
     BWWPSwitchDescription(
         key="boost_control",
-        name="Boost",
+        translation_key="boost_control",
         icon="mdi:rocket-launch-outline",
         entity_category=EntityCategory.CONFIG,
         register=22,
@@ -71,7 +71,6 @@ class BWWPSwitch(BWWPBaseEntity, SwitchEntity):
     ) -> None:
         super().__init__(runtime.coordinator, entry, description.key)
         self.entity_description = description
-        self._attr_name = description.name
         self._hub = runtime.hub
 
     @property

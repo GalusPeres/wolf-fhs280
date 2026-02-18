@@ -37,5 +37,140 @@
       "hub_not_found": "Modbus-Hub nicht in configuration.yaml gefunden",
       "unknown": "Unerwarteter Fehler"
     }
+  },
+  "entity": {
+    "number": {
+      "setpoint_control": {
+        "name": "Soll Temperatur"
+      },
+      "t_min_control": {
+        "name": "T min"
+      },
+      "t2_min_control": {
+        "name": "T2 min"
+      },
+      "abwesenheitstage_control": {
+        "name": "Abwesenheitstage"
+      }
+    },
+    "time": {
+      "start_time_control": {
+        "name": "Startzeit"
+      },
+      "stop_time_control": {
+        "name": "Endzeit"
+      }
+    },
+    "switch": {
+      "timer_control": {
+        "name": "Zeitprogramm"
+      },
+      "boost_control": {
+        "name": "Boost"
+      }
+    },
+    "button": {
+      "sync_device_clock": {
+        "name": "Uhrzeit synchronisieren"
+      }
+    },
+    "sensor": {
+      "t_pv_wp": {
+        "name": "Temperatur PV WP"
+      },
+      "t_pv_el": {
+        "name": "Temperatur PV Heizstab"
+      },
+      "legionellen_tage": {
+        "name": "Legionellen Tage"
+      },
+      "t_max": {
+        "name": "Temperatur max"
+      },
+      "t1": {
+        "name": "Verdampfertemperatur"
+      },
+      "t2": {
+        "name": "Speichertemperatur"
+      },
+      "kompressor": {
+        "name": "Kompressor",
+        "state": {
+          "Aus": "Aus",
+          "An": "An",
+          "Unknown": "Unbekannt"
+        }
+      },
+      "heizstab": {
+        "name": "Heizstab",
+        "state": {
+          "Aus": "Aus",
+          "An": "An",
+          "Unknown": "Unbekannt"
+        }
+      },
+      "betriebsstatus": {
+        "name": "Betriebsstatus",
+        "state": {
+          "Aus": "Aus",
+          "W\u00e4rmepumpe": "W\u00e4rmepumpe",
+          "Heizstab": "Heizstab",
+          "W\u00e4rmepumpe + Heizstab": "W\u00e4rmepumpe + Heizstab",
+          "Unknown": "Unbekannt"
+        }
+      },
+      "device_time": {
+        "name": "Ger\u00e4teuhrzeit"
+      },
+      "ventilator": {
+        "name": "Ventilator",
+        "state": {
+          "Niedrig": "Niedrig",
+          "Hoch": "Hoch",
+          "Unknown": "Unbekannt"
+        }
+      }
+    },
+    "select": {
+      "betriebsart_control": {
+        "name": "Betriebsart",
+        "state": {
+          "Aus": "Aus",
+          "W\u00e4rmepumpe": "W\u00e4rmepumpe",
+          "Heizstab": "Heizstab",
+          "W\u00e4rmepumpe + Heizstab": "W\u00e4rmepumpe + Heizstab",
+          "Boiler": "Boiler",
+          "W\u00e4rmepumpe + Boiler": "W\u00e4rmepumpe + Boiler"
+        }
+      },
+      "legionellen_control": {
+        "name": "Legionellen",
+        "state": {
+          "Aus": "Aus",
+          "60C": "60C",
+          "65C": "65C"
+        }
+      },
+      "pv_modus_control": {
+        "name": "PV Modus",
+        "state": {
+          "Aus": "Aus",
+          "W\u00e4rmepumpe": "W\u00e4rmepumpe",
+          "Heizstab": "Heizstab",
+          "Heizstab + W\u00e4rmepumpe": "Heizstab + W\u00e4rmepumpe"
+        }
+      },
+      "ferien_control": {
+        "name": "Ferienmodus",
+        "state": {
+          "Aus": "Aus",
+          "1 Woche": "1 Woche",
+          "2 Wochen": "2 Wochen",
+          "3 Wochen": "3 Wochen",
+          "3 Tage": "3 Tage",
+          "Manuell": "Manuell"
+        }
+      }
+    }
   }
 }
