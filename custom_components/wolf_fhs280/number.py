@@ -18,6 +18,8 @@ from .entity import BWWPBaseEntity
 
 WRITE_REFRESH_DELAY_SECONDS = 0.2
 FALLBACK_SETPOINT_MAX = 55
+SETPOINT_MIN_C = 5
+SETPOINT_MAX_C = 62
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -34,8 +36,8 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
         name="Soll Temperatur",
         icon="mdi:thermometer-chevron-up",
         entity_category=EntityCategory.CONFIG,
-        native_min_value=20,
-        native_max_value=80,
+        native_min_value=SETPOINT_MIN_C,
+        native_max_value=SETPOINT_MAX_C,
         native_step=1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         register=4,
@@ -123,8 +125,8 @@ class BWWPNumber(BWWPBaseEntity, NumberEntity):
         except (TypeError, ValueError):
             limit = FALLBACK_SETPOINT_MAX
 
-        min_value = int(float(self.entity_description.native_min_value or 20))
-        limit = max(min_value, min(limit, 80))
+        min_value = int(float(self.entity_description.native_min_value or SETPOINT_MIN_C))
+        limit = max(min_value, min(limit, SETPOINT_MAX_C))
         return float(limit)
 
     @property
