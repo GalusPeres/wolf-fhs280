@@ -1,4 +1,4 @@
-﻿"""Sensor platform for Wolf FHS280."""
+"""Sensor platform for Wolf FHS280."""
 
 from __future__ import annotations
 

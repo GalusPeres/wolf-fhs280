@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Wolf FHS280",
-        "description": "Modbus-TCP-Verbindung fuer FHS280 konfigurieren.",
+        "description": "Modbus-TCP-Verbindung für FHS280 konfigurieren.",
         "data": {
           "name": "Gerätename",
           "host": "Converter-IP",
@@ -15,18 +15,18 @@
       }
     },
     "error": {
-      "cannot_connect": "Keine Verbindung zum Geraet",
+      "cannot_connect": "Keine Verbindung zum Gerät",
       "unknown": "Unerwarteter Fehler"
     },
     "abort": {
-      "already_configured": "Dieses Geraet ist bereits eingerichtet"
+      "already_configured": "Dieses Gerät ist bereits eingerichtet"
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Wolf FHS280 Optionen",
-        "description": "Modbus-Verbindungsparameter aendern.",
+        "description": "Modbus-Verbindungsparameter ändern.",
         "data": {
           "name": "Gerätename",
           "host": "Converter-IP",
@@ -38,10 +38,8 @@
       }
     },
     "error": {
-      "cannot_connect": "Keine Verbindung zum Geraet",
+      "cannot_connect": "Keine Verbindung zum Gerät",
       "unknown": "Unerwarteter Fehler"
     }
   }
 }
-
-

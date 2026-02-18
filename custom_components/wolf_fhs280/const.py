@@ -1,4 +1,4 @@
-﻿"""Constants for the Wolf FHS280."""
+"""Constants for the Wolf FHS280."""
 
 from __future__ import annotations
 
@@ -74,11 +74,11 @@ TIMER_OPTIONS: Final[dict[int, str]] = {
 }
 BETRIEBSART_OPTIONS: Final[dict[int, str]] = {
     0: "Aus",
-    1: "Nur WÃ¤rmepumpe",
+    1: "Nur Wärmepumpe",
     2: "Nur Heizstab",
-    3: "WÃ¤rmepumpe + Heizstab",
+    3: "Wärmepumpe + Heizstab",
     4: "Boiler",
-    5: "WÃ¤rmepumpe + Boiler",
+    5: "Wärmepumpe + Boiler",
 }
 LEGIONELLEN_OPTIONS: Final[dict[int, str]] = {
     0: "Aus",
@@ -87,9 +87,9 @@ LEGIONELLEN_OPTIONS: Final[dict[int, str]] = {
 }
 PV_MODUS_OPTIONS: Final[dict[int, str]] = {
     0: "Aus",
-    1: "Nur WÃ¤rmepumpe",
+    1: "Nur Wärmepumpe",
     2: "Nur Heizstab",
-    3: "Heizstab + WÃ¤rmepumpe",
+    3: "Heizstab + Wärmepumpe",
 }
 FERIEN_OPTIONS: Final[dict[int, str]] = {
     0: "Aus",

@@ -1,4 +1,4 @@
-﻿"""Coordinator and Modbus client for Wolf FHS280."""
+"""Coordinator and Modbus client for Wolf FHS280."""
 
 from __future__ import annotations
 
@@ -60,17 +60,9 @@ class BWWPModbusHub:
         async with self._lock:
             await self._ensure_connection()
             if register_type == "holding":
-                result = await self._client.read_holding_registers(
-                    address=address,
-                    count=1,
-                    slave=self._slave_id,
-                )
+                result = await self._async_read_holding_register(address)
             else:
-                result = await self._client.read_input_registers(
-                    address=address,
-                    count=1,
-                    slave=self._slave_id,
-                )
+                result = await self._async_read_input_register(address)
 
             if result.isError():
                 raise ModbusException(str(result))
@@ -81,13 +73,54 @@ class BWWPModbusHub:
         write_value = value & 0xFFFF
         async with self._lock:
             await self._ensure_connection()
-            result = await self._client.write_register(
-                address=address,
-                value=write_value,
-                slave=self._slave_id,
-            )
+            result = await self._async_write_holding_register(address, write_value)
             if result.isError():
                 raise ModbusException(str(result))
+
+    async def _async_read_holding_register(self, address: int):
+        """Read one holding register with pymodbus API compatibility."""
+        try:
+            return await self._client.read_holding_registers(
+                address=address,
+                count=1,
+                device_id=self._slave_id,
+            )
+        except TypeError:
+            return await self._client.read_holding_registers(
+                address=address,
+                count=1,
+                slave=self._slave_id,
+            )
+
+    async def _async_read_input_register(self, address: int):
+        """Read one input register with pymodbus API compatibility."""
+        try:
+            return await self._client.read_input_registers(
+                address=address,
+                count=1,
+                device_id=self._slave_id,
+            )
+        except TypeError:
+            return await self._client.read_input_registers(
+                address=address,
+                count=1,
+                slave=self._slave_id,
+            )
+
+    async def _async_write_holding_register(self, address: int, value: int):
+        """Write one holding register with pymodbus API compatibility."""
+        try:
+            return await self._client.write_register(
+                address=address,
+                value=value,
+                device_id=self._slave_id,
+            )
+        except TypeError:
+            return await self._client.write_register(
+                address=address,
+                value=value,
+                slave=self._slave_id,
+            )
 
 
 class BWWPDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):

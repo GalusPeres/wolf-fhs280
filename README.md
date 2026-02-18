@@ -1,4 +1,4 @@
-﻿# Wolf FHS280 (Home Assistant Custom Integration)
+# Wolf FHS280 (Home Assistant Custom Integration)
 
 Custom integration for Wolf FHS 280 via Modbus TCP.
 

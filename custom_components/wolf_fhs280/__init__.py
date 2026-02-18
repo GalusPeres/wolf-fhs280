@@ -1,4 +1,4 @@
-﻿"""Wolf FHS280 custom integration."""
+"""Wolf FHS280 custom integration."""
 
 from __future__ import annotations
 

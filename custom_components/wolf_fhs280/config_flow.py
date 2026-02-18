@@ -12,6 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
+from pymodbus.exceptions import ModbusException
 
 from .const import (
     CONF_NAME,
@@ -93,7 +94,8 @@ async def _async_validate_input(user_input: dict[str, Any]) -> dict[str, Any]:
     )
     try:
         await hub.async_read_register("holding", 4)
-    except (OSError, asyncio.TimeoutError, Exception) as err:
+    except (OSError, asyncio.TimeoutError, ModbusException) as err:
+        LOGGER.debug("Config flow connection test failed: %s", err)
         raise CannotConnect from err
     finally:
         await hub.async_close()
