@@ -4,18 +4,19 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from homeassistant.components.modbus import get_hub
+from homeassistant.components.modbus.modbus import DATA_MODBUS_HUBS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
+    CONF_HUB,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE_ID,
-    CONF_TIMEOUT,
-    DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SLAVE_ID,
-    DEFAULT_TIMEOUT,
     DOMAIN,
     PLATFORMS,
 )
@@ -34,15 +35,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up BWWP from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    host = _entry_value(entry, CONF_HOST)
-    port = int(_entry_value(entry, CONF_PORT, DEFAULT_PORT))
-    slave_id = int(_entry_value(entry, CONF_SLAVE_ID, DEFAULT_SLAVE_ID))
-    timeout = float(_entry_value(entry, CONF_TIMEOUT, DEFAULT_TIMEOUT))
-    scan_interval = int(
-        _entry_value(entry, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    )
+    modbus_hubs = hass.data.get(DATA_MODBUS_HUBS, {})
+    if not modbus_hubs:
+        raise ConfigEntryNotReady(
+            "No Home Assistant modbus hub is configured. Configure modbus: first."
+        )
 
-    hub = BWWPModbusHub(host=host, port=port, slave_id=slave_id, timeout=timeout)
+    hub_name = _resolve_hub_name(hass, entry)
+    try:
+        modbus_hub = get_hub(hass, hub_name)
+    except KeyError as err:
+        raise ConfigEntryNotReady(f"Configured modbus hub '{hub_name}' not found") from err
+
+    slave_id = int(_entry_value(entry, CONF_SLAVE_ID, DEFAULT_SLAVE_ID))
+    scan_interval = int(_entry_value(entry, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+
+    hub = BWWPModbusHub(hub=modbus_hub, hub_name=hub_name, slave_id=slave_id)
     coordinator = BWWPDataUpdateCoordinator(
         hass=hass,
         hub=hub,
@@ -82,3 +90,33 @@ def _entry_value(entry: ConfigEntry, key: str, default=None):
     return entry.options.get(key, entry.data.get(key, default))
 
 
+def _resolve_hub_name(hass: HomeAssistant, entry: ConfigEntry) -> str:
+    """Resolve configured modbus hub with backward-compatible fallback."""
+    hubs = hass.data.get(DATA_MODBUS_HUBS, {})
+
+    configured_hub = _entry_value(entry, CONF_HUB)
+    if configured_hub and configured_hub in hubs:
+        return configured_hub
+
+    # Backward compatibility for older entries that stored host/port.
+    legacy_host = _entry_value(entry, CONF_HOST)
+    legacy_port = _entry_value(entry, CONF_PORT)
+    if legacy_host:
+        legacy_port_str = str(legacy_port) if legacy_port is not None else None
+        for name, hub in hubs.items():
+            params = getattr(hub, "_pb_params", {})
+            if str(params.get("host", "")) != str(legacy_host):
+                continue
+            if legacy_port_str and str(params.get("port")) != legacy_port_str:
+                continue
+            return name
+
+    if len(hubs) == 1:
+        return next(iter(hubs))
+
+    if configured_hub:
+        raise ConfigEntryNotReady(
+            f"Configured modbus hub '{configured_hub}' not found."
+        )
+
+    raise ConfigEntryNotReady("No modbus hub selected for this entry.")

@@ -7,23 +7,23 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+from homeassistant.components.modbus import get_hub
+from homeassistant.components.modbus.modbus import DATA_MODBUS_HUBS
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 from pymodbus.exceptions import ModbusException
 
 from .const import (
+    CONF_HUB,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE_ID,
-    CONF_TIMEOUT,
+    DEFAULT_HUB,
     DEFAULT_NAME,
-    DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SLAVE_ID,
-    DEFAULT_TIMEOUT,
     DOMAIN,
 )
 from .coordinator import BWWPModbusHub
@@ -45,14 +45,13 @@ def _number_box(
     )
 
 
-def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
+def _build_schema(defaults: dict[str, Any], available_hubs: list[str]) -> vol.Schema:
+    hub_default = defaults.get(CONF_HUB) or (available_hubs[0] if available_hubs else DEFAULT_HUB)
+
     return vol.Schema(
         {
             vol.Required(CONF_NAME, default=defaults.get(CONF_NAME, DEFAULT_NAME)): str,
-            vol.Required(CONF_HOST, default=defaults.get(CONF_HOST, "")): str,
-            vol.Required(
-                CONF_PORT, default=defaults.get(CONF_PORT, DEFAULT_PORT)
-            ): _number_box(min_value=1, max_value=65535, step=1),
+            vol.Required(CONF_HUB, default=hub_default): str,
             vol.Required(
                 CONF_SLAVE_ID, default=defaults.get(CONF_SLAVE_ID, DEFAULT_SLAVE_ID)
             ): _number_box(min_value=1, max_value=247, step=1),
@@ -60,9 +59,6 @@ def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
                 CONF_SCAN_INTERVAL,
                 default=defaults.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
             ): _number_box(min_value=1, max_value=3600, step=1),
-            vol.Required(
-                CONF_TIMEOUT, default=defaults.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
-            ): _number_box(min_value=0.5, max_value=60, step=0.5),
         }
     )
 
@@ -72,33 +68,39 @@ def _normalize_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
     return {
         **user_input,
         CONF_NAME: str(user_input[CONF_NAME]).strip(),
-        CONF_HOST: str(user_input[CONF_HOST]).strip(),
-        CONF_PORT: int(user_input[CONF_PORT]),
+        CONF_HUB: str(user_input[CONF_HUB]).strip(),
         CONF_SLAVE_ID: int(user_input[CONF_SLAVE_ID]),
         CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
-        CONF_TIMEOUT: float(user_input[CONF_TIMEOUT]),
     }
 
 
-async def _async_validate_input(user_input: dict[str, Any]) -> dict[str, Any]:
-    """Validate connection and one known register read."""
+def _available_hubs(hass) -> list[str]:
+    hubs = hass.data.get(DATA_MODBUS_HUBS, {})
+    return sorted(hubs.keys())
+
+
+async def _async_validate_input(hass, user_input: dict[str, Any]) -> dict[str, Any]:
+    """Validate hub existence and one known register read via HA modbus hub."""
     cleaned = _normalize_user_input(user_input)
-    if not cleaned[CONF_HOST]:
-        raise CannotConnect
+    if not cleaned[CONF_HUB]:
+        raise HubNotFound
+
+    try:
+        modbus_hub = get_hub(hass, cleaned[CONF_HUB])
+    except KeyError as err:
+        raise HubNotFound from err
 
     hub = BWWPModbusHub(
-        host=cleaned[CONF_HOST],
-        port=cleaned[CONF_PORT],
+        hub=modbus_hub,
+        hub_name=cleaned[CONF_HUB],
         slave_id=cleaned[CONF_SLAVE_ID],
-        timeout=cleaned[CONF_TIMEOUT],
     )
+
     try:
         await hub.async_read_register("holding", 4)
     except (OSError, asyncio.TimeoutError, ModbusException) as err:
         LOGGER.debug("Config flow connection test failed: %s", err)
         raise CannotConnect from err
-    finally:
-        await hub.async_close()
 
     return cleaned
 
@@ -113,7 +115,9 @@ class BWWPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                user_input = await _async_validate_input(user_input)
+                user_input = await _async_validate_input(self.hass, user_input)
+            except HubNotFound:
+                errors["base"] = "hub_not_found"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -121,7 +125,7 @@ class BWWPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(
-                    f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}:{user_input[CONF_SLAVE_ID]}"
+                    f"{user_input[CONF_HUB]}:{user_input[CONF_SLAVE_ID]}"
                 )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
@@ -130,7 +134,7 @@ class BWWPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=_build_schema(user_input or {}),
+            data_schema=_build_schema(user_input or {}, _available_hubs(self.hass)),
             errors=errors,
         )
 
@@ -151,7 +155,9 @@ class BWWPOptionsFlow(config_entries.OptionsFlow):
 
         if user_input is not None:
             try:
-                user_input = await _async_validate_input(user_input)
+                user_input = await _async_validate_input(self.hass, user_input)
+            except HubNotFound:
+                errors["base"] = "hub_not_found"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -163,10 +169,14 @@ class BWWPOptionsFlow(config_entries.OptionsFlow):
         defaults = {**self._config_entry.data, **self._config_entry.options}
         return self.async_show_form(
             step_id="init",
-            data_schema=_build_schema(defaults),
+            data_schema=_build_schema(defaults, _available_hubs(self.hass)),
             errors=errors,
         )
 
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class HubNotFound(HomeAssistantError):
+    """Error to indicate selected modbus hub does not exist."""

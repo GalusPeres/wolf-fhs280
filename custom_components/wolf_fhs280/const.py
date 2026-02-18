@@ -10,11 +10,13 @@ from homeassistant.const import Platform
 DOMAIN: Final = "wolf_fhs280"
 
 CONF_NAME: Final = "name"
+CONF_HUB: Final = "hub"
 CONF_SCAN_INTERVAL: Final = "scan_interval"
 CONF_SLAVE_ID: Final = "slave_id"
 CONF_TIMEOUT: Final = "timeout"
 
 DEFAULT_NAME: Final = "Wolf FHS280"
+DEFAULT_HUB: Final = "modbus_hub"
 DEFAULT_PORT: Final = 502
 DEFAULT_SCAN_INTERVAL: Final = 30
 DEFAULT_SLAVE_ID: Final = 3
