@@ -422,11 +422,11 @@ class BWWPDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             kompressor_on = kompressor_raw is not None and int(kompressor_raw) == 1
             heizstab_on = heizstab_raw is not None and int(heizstab_raw) == 1
             if kompressor_on and heizstab_on:
-                data["betriebsstatus"] = "Waermepumpe + Heizstab"
+                data["betriebsstatus"] = "Wärmepumpe + Heizstab"
             elif heizstab_on:
                 data["betriebsstatus"] = "Heizstab"
             elif kompressor_on:
-                data["betriebsstatus"] = "Waermepumpe"
+                data["betriebsstatus"] = "Wärmepumpe"
             else:
                 data["betriebsstatus"] = "Aus"
 

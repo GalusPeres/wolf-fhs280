@@ -78,11 +78,11 @@ TIMER_OPTIONS: Final[dict[int, str]] = {
 }
 BETRIEBSART_OPTIONS: Final[dict[int, str]] = {
     0: "Aus",
-    1: "Waermepumpe",
+    1: "Wärmepumpe",
     2: "Heizstab",
-    3: "Waermepumpe + Heizstab",
+    3: "Wärmepumpe + Heizstab",
     4: "Boiler",
-    5: "Waermepumpe + Boiler",
+    5: "Wärmepumpe + Boiler",
 }
 LEGIONELLEN_OPTIONS: Final[dict[int, str]] = {
     0: "Aus",
@@ -91,9 +91,9 @@ LEGIONELLEN_OPTIONS: Final[dict[int, str]] = {
 }
 PV_MODUS_OPTIONS: Final[dict[int, str]] = {
     0: "Aus",
-    1: "Waermepumpe",
+    1: "Wärmepumpe",
     2: "Heizstab",
-    3: "Heizstab + Waermepumpe",
+    3: "Heizstab + Wärmepumpe",
 }
 FERIEN_OPTIONS: Final[dict[int, str]] = {
     0: "Aus",
