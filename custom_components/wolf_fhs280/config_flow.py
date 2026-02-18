@@ -2,30 +2,26 @@
 
 from __future__ import annotations
 
-import asyncio
-from contextlib import suppress
 import logging
 from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
 from .const import (
+    CONF_HUB,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
     CONF_SETPOINT_MAX,
     CONF_SLAVE_ID,
-    CONF_TIMEOUT,
+    DEFAULT_HUB,
     DEFAULT_NAME,
-    DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SETPOINT_MAX,
     DEFAULT_SLAVE_ID,
-    DEFAULT_TIMEOUT,
     DOMAIN,
 )
 
@@ -48,35 +44,12 @@ def _number_box(
     )
 
 
-def _with_legacy_defaults(hass, defaults: dict[str, Any]) -> dict[str, Any]:
-    """Fill host/port defaults from a previous hub-based config if possible."""
+def _with_legacy_defaults(defaults: dict[str, Any]) -> dict[str, Any]:
+    """Map old options/data to current defaults where possible."""
     merged = dict(defaults)
-    if merged.get(CONF_HOST):
-        return merged
-
     legacy_hub = merged.get(LEGACY_CONF_HUB)
-    if not legacy_hub:
-        return merged
-
-    try:
-        from homeassistant.components.modbus import get_hub
-
-        modbus_hub = get_hub(hass, str(legacy_hub))
-    except Exception:
-        return merged
-
-    params = getattr(modbus_hub, "_pb_params", {})
-    host = params.get("host")
-    port = params.get("port")
-
-    if host:
-        merged.setdefault(CONF_HOST, str(host))
-    if port is not None:
-        try:
-            merged.setdefault(CONF_PORT, int(port))
-        except (TypeError, ValueError):
-            pass
-
+    if not merged.get(CONF_HUB) and legacy_hub:
+        merged[CONF_HUB] = str(legacy_hub)
     return merged
 
 
@@ -84,10 +57,7 @@ def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
     return vol.Schema(
         {
             vol.Required(CONF_NAME, default=defaults.get(CONF_NAME, DEFAULT_NAME)): str,
-            vol.Required(CONF_HOST, default=defaults.get(CONF_HOST, "")): str,
-            vol.Required(
-                CONF_PORT, default=defaults.get(CONF_PORT, DEFAULT_PORT)
-            ): _number_box(min_value=1, max_value=65535, step=1),
+            vol.Required(CONF_HUB, default=defaults.get(CONF_HUB, DEFAULT_HUB)): str,
             vol.Required(
                 CONF_SLAVE_ID, default=defaults.get(CONF_SLAVE_ID, DEFAULT_SLAVE_ID)
             ): _number_box(min_value=1, max_value=247, step=1),
@@ -95,9 +65,6 @@ def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
                 CONF_SCAN_INTERVAL,
                 default=defaults.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
             ): _number_box(min_value=1, max_value=3600, step=1),
-            vol.Required(
-                CONF_TIMEOUT, default=defaults.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
-            ): _number_box(min_value=0.5, max_value=60, step=0.5),
             vol.Required(
                 CONF_SETPOINT_MAX,
                 default=defaults.get(CONF_SETPOINT_MAX, DEFAULT_SETPOINT_MAX),
@@ -111,27 +78,31 @@ def _normalize_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
     return {
         **user_input,
         CONF_NAME: str(user_input[CONF_NAME]).strip(),
-        CONF_HOST: str(user_input[CONF_HOST]).strip(),
-        CONF_PORT: int(user_input[CONF_PORT]),
+        CONF_HUB: str(user_input[CONF_HUB]).strip(),
         CONF_SLAVE_ID: int(user_input[CONF_SLAVE_ID]),
         CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
-        CONF_TIMEOUT: float(user_input[CONF_TIMEOUT]),
         CONF_SETPOINT_MAX: int(user_input[CONF_SETPOINT_MAX]),
     }
 
 
-async def _async_validate_input(user_input: dict[str, Any]) -> dict[str, Any]:
-    """Validate connection quickly to avoid long config-flow waits."""
+async def _async_validate_hub_exists(hass, hub_name: str) -> None:
+    """Validate that the named Home Assistant Modbus hub exists."""
+    if not hub_name:
+        raise HubNotFound
+
+    try:
+        from homeassistant.components.modbus import get_hub
+
+        get_hub(hass, hub_name)
+    except Exception as err:
+        LOGGER.debug("Configured modbus hub '%s' not found: %s", hub_name, err)
+        raise HubNotFound from err
+
+
+async def _async_validate_input(hass, user_input: dict[str, Any]) -> dict[str, Any]:
+    """Validate config flow input."""
     cleaned = _normalize_user_input(user_input)
-    if not cleaned[CONF_HOST]:
-        raise CannotConnect
-
-    await _async_probe_tcp(
-        host=cleaned[CONF_HOST],
-        port=cleaned[CONF_PORT],
-        timeout=cleaned[CONF_TIMEOUT],
-    )
-
+    await _async_validate_hub_exists(hass, cleaned[CONF_HUB])
     return cleaned
 
 
@@ -145,22 +116,22 @@ class BWWPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                user_input = await _async_validate_input(user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
+                user_input = await _async_validate_input(self.hass, user_input)
+            except HubNotFound:
+                errors["base"] = "hub_not_found"
             except Exception:
                 LOGGER.exception("Unexpected error while validating config flow input")
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(
-                    f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}:{user_input[CONF_SLAVE_ID]}"
+                    f"{user_input[CONF_HUB]}:{user_input[CONF_SLAVE_ID]}"
                 )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
 
-        defaults = _with_legacy_defaults(self.hass, user_input or {})
+        defaults = _with_legacy_defaults(user_input or {})
         return self.async_show_form(
             step_id="user",
             data_schema=_build_schema(defaults),
@@ -184,9 +155,9 @@ class BWWPOptionsFlow(config_entries.OptionsFlow):
 
         if user_input is not None:
             try:
-                user_input = await _async_validate_input(user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
+                user_input = await _async_validate_input(self.hass, user_input)
+            except HubNotFound:
+                errors["base"] = "hub_not_found"
             except Exception:
                 LOGGER.exception("Unexpected error while validating options flow input")
                 errors["base"] = "unknown"
@@ -194,7 +165,7 @@ class BWWPOptionsFlow(config_entries.OptionsFlow):
                 return self.async_create_entry(title="", data=user_input)
 
         defaults = {**self._config_entry.data, **self._config_entry.options}
-        defaults = _with_legacy_defaults(self.hass, defaults)
+        defaults = _with_legacy_defaults(defaults)
         return self.async_show_form(
             step_id="init",
             data_schema=_build_schema(defaults),
@@ -202,24 +173,5 @@ class BWWPOptionsFlow(config_entries.OptionsFlow):
         )
 
 
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-async def _async_probe_tcp(host: str, port: int, timeout: float) -> None:
-    """Do a short raw TCP connect test."""
-    validation_timeout = max(0.5, min(timeout, 2.0))
-    writer = None
-    try:
-        _, writer = await asyncio.wait_for(
-            asyncio.open_connection(host=host, port=port),
-            timeout=validation_timeout,
-        )
-    except (OSError, asyncio.TimeoutError) as err:
-        LOGGER.debug("Config flow TCP probe failed: %s", err)
-        raise CannotConnect from err
-    finally:
-        if writer is not None:
-            writer.close()
-            with suppress(Exception):
-                await asyncio.wait_for(writer.wait_closed(), timeout=0.5)
+class HubNotFound(HomeAssistantError):
+    """Error to indicate configured modbus hub does not exist."""

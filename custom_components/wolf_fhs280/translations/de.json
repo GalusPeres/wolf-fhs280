@@ -3,44 +3,40 @@
     "step": {
       "user": {
         "title": "Wolf FHS280",
-        "description": "Modbus-TCP-Verbindung für FHS280 konfigurieren.",
+        "description": "Verwendet einen vorhandenen Home-Assistant-Modbus-Hub aus der configuration.yaml.",
         "data": {
-          "name": "Gerätename",
-          "host": "Converter-IP",
-          "port": "Port",
+          "name": "Ger\u00e4tename",
+          "hub": "Modbus-Hub-Name (YAML)",
           "slave_id": "Modbus-ID",
           "scan_interval": "Abfrageintervall (Sekunden)",
-          "timeout": "Timeout (Sekunden)",
-          "setpoint_max": "Max. Solltemperatur (°C)"
+          "setpoint_max": "Max. Solltemperatur (\u00b0C)"
         }
       }
     },
     "error": {
-      "cannot_connect": "Keine Verbindung zum Gerät",
+      "hub_not_found": "Modbus-Hub nicht in configuration.yaml gefunden",
       "unknown": "Unerwarteter Fehler"
     },
     "abort": {
-      "already_configured": "Dieses Gerät ist bereits eingerichtet"
+      "already_configured": "Dieses Ger\u00e4t ist bereits eingerichtet"
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Wolf FHS280 Optionen",
-        "description": "Verbindungs- und Abfrageeinstellungen ändern.",
+        "description": "Modbus-Hub und Abfrageeinstellungen \u00e4ndern.",
         "data": {
-          "name": "Gerätename",
-          "host": "Converter-IP",
-          "port": "Port",
+          "name": "Ger\u00e4tename",
+          "hub": "Modbus-Hub-Name (YAML)",
           "slave_id": "Modbus-ID",
           "scan_interval": "Abfrageintervall (Sekunden)",
-          "timeout": "Timeout (Sekunden)",
-          "setpoint_max": "Max. Solltemperatur (°C)"
+          "setpoint_max": "Max. Solltemperatur (\u00b0C)"
         }
       }
     },
     "error": {
-      "cannot_connect": "Keine Verbindung zum Gerät",
+      "hub_not_found": "Modbus-Hub nicht in configuration.yaml gefunden",
       "unknown": "Unerwarteter Fehler"
     }
   }

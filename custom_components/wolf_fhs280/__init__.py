@@ -7,24 +7,20 @@ import logging
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
+    CONF_HUB,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE_ID,
-    CONF_TIMEOUT,
-    DEFAULT_PORT,
+    DEFAULT_HUB,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SLAVE_ID,
-    DEFAULT_TIMEOUT,
     DOMAIN,
     PLATFORMS,
 )
-from .coordinator import BWWPDataUpdateCoordinator, BWWPModbusHub
-
-LEGACY_CONF_HUB = "hub"
+from .coordinator import BWWPDataUpdateCoordinator, BWWPSharedModbusHub
 LOGGER = logging.getLogger(__name__)
 
 
@@ -40,30 +36,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up BWWP from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    host = _entry_value(entry, CONF_HOST)
-    port = int(_entry_value(entry, CONF_PORT, DEFAULT_PORT))
-
-    if not host:
-        host, legacy_port = _resolve_legacy_connection(hass, entry)
-        if legacy_port is not None and _entry_value(entry, CONF_PORT) is None:
-            port = legacy_port
-
-    if not host:
+    hub_name = str(_entry_value(entry, CONF_HUB, DEFAULT_HUB)).strip()
+    if not hub_name:
         raise ConfigEntryNotReady(
-            "No host configured for Wolf FHS280 entry. Reconfigure integration options."
+            "No Modbus hub configured. Set a hub name in integration options."
         )
 
     slave_id = int(_entry_value(entry, CONF_SLAVE_ID, DEFAULT_SLAVE_ID))
-    timeout = float(_entry_value(entry, CONF_TIMEOUT, DEFAULT_TIMEOUT))
     scan_interval = int(
         _entry_value(entry, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     )
-    hub = BWWPModbusHub(
-        host=str(host),
-        port=port,
-        slave_id=slave_id,
-        timeout=timeout,
-    )
+
+    try:
+        from homeassistant.components.modbus import get_hub
+
+        modbus_hub = get_hub(hass, hub_name)
+    except Exception as err:
+        raise ConfigEntryNotReady(
+            f"Modbus hub '{hub_name}' not found. Configure it in configuration.yaml under modbus:."
+        ) from err
+
+    hub = BWWPSharedModbusHub(modbus_hub, hub_name, slave_id)
 
     coordinator = BWWPDataUpdateCoordinator(
         hass=hass,
@@ -102,34 +95,3 @@ async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> Non
 def _entry_value(entry: ConfigEntry, key: str, default=None):
     """Read key from options first, then fallback to entry data."""
     return entry.options.get(key, entry.data.get(key, default))
-
-
-def _resolve_legacy_connection(
-    hass: HomeAssistant, entry: ConfigEntry
-) -> tuple[str | None, int | None]:
-    """Resolve host/port from previous hub-based entries."""
-    legacy_hub = _entry_value(entry, LEGACY_CONF_HUB)
-    if not legacy_hub:
-        return None, None
-
-    try:
-        from homeassistant.components.modbus import get_hub
-
-        modbus_hub = get_hub(hass, str(legacy_hub))
-    except Exception:
-        return None, None
-
-    params = getattr(modbus_hub, "_pb_params", {})
-    host = params.get("host")
-    port = params.get("port")
-    parsed_port = None
-
-    if port is not None:
-        try:
-            parsed_port = int(port)
-        except (TypeError, ValueError):
-            parsed_port = None
-
-    if host is None:
-        return None, parsed_port
-    return str(host), parsed_port

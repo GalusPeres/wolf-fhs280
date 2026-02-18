@@ -5,20 +5,20 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final, Literal
 
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TIMEOUT, Platform
+from homeassistant.const import Platform
 
 DOMAIN: Final = "wolf_fhs280"
 
 CONF_NAME: Final = "name"
+CONF_HUB: Final = "hub"
 CONF_SCAN_INTERVAL: Final = "scan_interval"
 CONF_SLAVE_ID: Final = "slave_id"
 CONF_SETPOINT_MAX: Final = "setpoint_max"
 
 DEFAULT_NAME: Final = "Wolf FHS280"
-DEFAULT_PORT: Final = 502
+DEFAULT_HUB: Final = "waveshare_modbus_gateway"
 DEFAULT_SCAN_INTERVAL: Final = 30
 DEFAULT_SLAVE_ID: Final = 3
-DEFAULT_TIMEOUT: Final = 5.0
 DEFAULT_SETPOINT_MAX: Final = 55
 
 PLATFORMS: Final = [
@@ -78,11 +78,11 @@ TIMER_OPTIONS: Final[dict[int, str]] = {
 }
 BETRIEBSART_OPTIONS: Final[dict[int, str]] = {
     0: "Aus",
-    1: "Wärmepumpe",
+    1: "W\u00e4rmepumpe",
     2: "Heizstab",
-    3: "Wärmepumpe + Heizstab",
+    3: "W\u00e4rmepumpe + Heizstab",
     4: "Boiler",
-    5: "Wärmepumpe + Boiler",
+    5: "W\u00e4rmepumpe + Boiler",
 }
 LEGIONELLEN_OPTIONS: Final[dict[int, str]] = {
     0: "Aus",
@@ -91,9 +91,9 @@ LEGIONELLEN_OPTIONS: Final[dict[int, str]] = {
 }
 PV_MODUS_OPTIONS: Final[dict[int, str]] = {
     0: "Aus",
-    1: "Wärmepumpe",
+    1: "W\u00e4rmepumpe",
     2: "Heizstab",
-    3: "Heizstab + Wärmepumpe",
+    3: "Heizstab + W\u00e4rmepumpe",
 }
 FERIEN_OPTIONS: Final[dict[int, str]] = {
     0: "Aus",

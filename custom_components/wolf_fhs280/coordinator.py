@@ -341,7 +341,7 @@ class BWWPDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def __init__(
         self,
         hass,
-        hub: BWWPModbusHub,
+        hub: BWWPModbusHub | BWWPSharedModbusHub,
         scan_interval_seconds: int,
     ) -> None:
         super().__init__(
@@ -422,11 +422,11 @@ class BWWPDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             kompressor_on = kompressor_raw is not None and int(kompressor_raw) == 1
             heizstab_on = heizstab_raw is not None and int(heizstab_raw) == 1
             if kompressor_on and heizstab_on:
-                data["betriebsstatus"] = "Wärmepumpe + Heizstab"
+                data["betriebsstatus"] = "W\u00e4rmepumpe + Heizstab"
             elif heizstab_on:
                 data["betriebsstatus"] = "Heizstab"
             elif kompressor_on:
-                data["betriebsstatus"] = "Wärmepumpe"
+                data["betriebsstatus"] = "W\u00e4rmepumpe"
             else:
                 data["betriebsstatus"] = "Aus"
 

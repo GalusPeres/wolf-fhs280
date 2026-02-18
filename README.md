@@ -2,17 +2,37 @@
 
 Custom integration for Wolf FHS280 via Modbus TCP.
 
+## Important Change
+
+This integration now reuses Home Assistant's built-in `modbus` hub from `configuration.yaml`.
+It does **not** open a second direct TCP connection anymore.
+
+## Required YAML (Gateway Head)
+
+Add this in `configuration.yaml` (adjust `host` if needed):
+
+```yaml
+modbus:
+  - name: waveshare_modbus_gateway
+    type: tcp
+    host: 192.168.2.254
+    port: 502
+    timeout: 5
+    message_wait_milliseconds: 50
+```
+
+You can keep your other modbus sensors/meters in the same `modbus:` block.
+
 ## Features
 
 - HACS installable custom integration
 - Config flow (UI setup in Home Assistant)
 - Setup fields in UI:
   - Device name
-  - Converter IP
-  - Port
-  - Modbus ID (slave ID)
+  - Modbus hub name (from YAML, e.g. `waveshare_modbus_gateway`)
+  - Modbus ID (slave ID, e.g. `3`)
   - Poll interval
-  - Timeout
+  - Max setpoint
 - Exposes:
   - Sensors (temperatures and key status values)
   - Writable numbers (setpoint, limits, days)
@@ -30,12 +50,13 @@ Custom integration for Wolf FHS280 via Modbus TCP.
 
 ## Setup in Home Assistant
 
-1. `Settings` -> `Devices & Services` -> `Add Integration`.
-2. Search for `Wolf FHS280`.
-3. Enter your Modbus TCP settings:
+1. Ensure the YAML `modbus:` hub is configured (see above).
+2. Restart Home Assistant after YAML changes.
+3. Go to `Settings` -> `Devices & Services` -> `Add Integration`.
+4. Search for `Wolf FHS280`.
+5. Enter:
    - Device name
-   - Converter IP (for example `192.168.2.254`)
-   - Port (for example `502`)
-   - Modbus ID (for example `3`)
+   - Modbus hub name from YAML (e.g. `waveshare_modbus_gateway`)
+   - Modbus ID (e.g. `3`)
    - Poll interval
-   - Timeout
+   - Max setpoint

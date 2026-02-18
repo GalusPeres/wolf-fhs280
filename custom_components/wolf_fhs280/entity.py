@@ -30,9 +30,11 @@ class BWWPBaseEntity(CoordinatorEntity[BWWPDataUpdateCoordinator]):
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_{unique_key}"
 
-        host = str(
-            entry.options.get(CONF_HOST, entry.data.get(CONF_HOST, coordinator.hub.host))
+        host_value = entry.options.get(
+            CONF_HOST,
+            entry.data.get(CONF_HOST, coordinator.hub.host),
         )
+        host = str(host_value).strip() if host_value else ""
         name = entry.options.get(CONF_NAME, entry.data.get(CONF_NAME, DEFAULT_NAME))
 
         self._attr_device_info = DeviceInfo(
