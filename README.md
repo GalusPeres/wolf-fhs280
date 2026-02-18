@@ -34,6 +34,7 @@ You can keep your other modbus sensors/meters in the same `modbus:` block.
   - Poll interval
 - Exposes:
   - Sensors (temperatures and key status values)
+  - Read-only sensor for device clock (`Geräteuhrzeit`)
   - Writable numbers (setpoint, limits, days). Setpoint is limited by device `t_max`.
   - Writable time entities (start/stop time)
   - Button to sync device clock once with Home Assistant time

@@ -82,8 +82,9 @@ class BWWPTime(BWWPBaseEntity, TimeEntity):
 
     @property
     def native_value(self) -> time | None:
-        hour_raw = self.coordinator.data.get(self.entity_description.hour_state_key)
-        minute_raw = self.coordinator.data.get(self.entity_description.minute_state_key)
+        data = self.coordinator.data or {}
+        hour_raw = data.get(self.entity_description.hour_state_key)
+        minute_raw = data.get(self.entity_description.minute_state_key)
         if hour_raw is None or minute_raw is None:
             return None
 

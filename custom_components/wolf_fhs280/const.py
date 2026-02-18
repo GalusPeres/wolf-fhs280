@@ -62,6 +62,8 @@ READ_REGISTERS: Final[tuple[RegisterDefinition, ...]] = (
     RegisterDefinition("boost_raw", 22, "holding"),
     RegisterDefinition("t_max", 28, "holding"),
     RegisterDefinition("legionellen_tage", 33, "holding"),
+    RegisterDefinition("current_min", 104, "holding"),
+    RegisterDefinition("current_h", 105, "holding"),
     RegisterDefinition("t1", 7, "input", scale=0.1, precision=1),
     RegisterDefinition("t2", 8, "input", scale=0.1, precision=1),
     RegisterDefinition("kompressor_raw", 9, "input"),

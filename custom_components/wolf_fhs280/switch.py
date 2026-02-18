@@ -76,7 +76,8 @@ class BWWPSwitch(BWWPBaseEntity, SwitchEntity):
 
     @property
     def is_on(self) -> bool | None:
-        value = self.coordinator.data.get(self.entity_description.state_key)
+        data = self.coordinator.data or {}
+        value = data.get(self.entity_description.state_key)
         if value is None:
             return None
         return int(value) == 1

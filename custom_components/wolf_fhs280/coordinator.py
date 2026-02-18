@@ -430,6 +430,20 @@ class BWWPDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             else:
                 data["betriebsstatus"] = "Aus"
 
+        current_h = data.get("current_h")
+        current_min = data.get("current_min")
+        try:
+            hour = int(current_h) if current_h is not None else None
+            minute = int(current_min) if current_min is not None else None
+        except (TypeError, ValueError):
+            hour = None
+            minute = None
+
+        if hour is not None and minute is not None and 0 <= hour <= 23 and 0 <= minute <= 59:
+            data["device_time"] = f"{hour:02d}:{minute:02d}"
+        else:
+            data["device_time"] = None
+
         return data
 
 

@@ -116,7 +116,8 @@ class BWWPNumber(BWWPBaseEntity, NumberEntity):
         if self.entity_description.key != "setpoint_control":
             return self.entity_description.native_max_value
 
-        raw_limit = self.coordinator.data.get("t_max")
+        data = self.coordinator.data or {}
+        raw_limit = data.get("t_max")
         try:
             limit = int(raw_limit)
         except (TypeError, ValueError):
@@ -128,7 +129,8 @@ class BWWPNumber(BWWPBaseEntity, NumberEntity):
 
     @property
     def native_value(self) -> float | None:
-        value = self.coordinator.data.get(self.entity_description.state_key)
+        data = self.coordinator.data or {}
+        value = data.get(self.entity_description.state_key)
         if value is None:
             return None
         return int(value)

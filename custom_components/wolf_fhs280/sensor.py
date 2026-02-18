@@ -82,6 +82,11 @@ SENSORS: tuple[BWWPSensorDescription, ...] = (
         icon="mdi:heat-pump-outline",
     ),
     BWWPSensorDescription(
+        key="device_time",
+        name="Ger\u00e4teuhrzeit",
+        icon="mdi:clock-outline",
+    ),
+    BWWPSensorDescription(
         key="ventilator",
         name="Ventilator",
         icon="mdi:fan",
@@ -116,4 +121,5 @@ class BWWPSensor(BWWPBaseEntity, SensorEntity):
 
     @property
     def native_value(self):
-        return self.coordinator.data.get(self.entity_description.key)
+        data = self.coordinator.data or {}
+        return data.get(self.entity_description.key)

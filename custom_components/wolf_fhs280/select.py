@@ -107,7 +107,8 @@ class BWWPSelect(BWWPBaseEntity, SelectEntity):
 
     @property
     def current_option(self) -> str | None:
-        value = self.coordinator.data.get(self.entity_description.state_key)
+        data = self.coordinator.data or {}
+        value = data.get(self.entity_description.state_key)
         if value in self.entity_description.options:
             return value
         return None
