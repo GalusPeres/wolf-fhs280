@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RuntimeData
@@ -35,6 +36,8 @@ SELECT_DESCRIPTIONS: tuple[BWWPSelectDescription, ...] = (
     BWWPSelectDescription(
         key="betriebsart_control",
         name="Betriebsart einstellen",
+        icon="mdi:cog-transfer",
+        entity_category=EntityCategory.CONFIG,
         options=tuple(BETRIEBSART_OPTIONS.values()),
         register=12,
         state_key="betriebsart",
@@ -43,6 +46,8 @@ SELECT_DESCRIPTIONS: tuple[BWWPSelectDescription, ...] = (
     BWWPSelectDescription(
         key="legionellen_control",
         name="Legionellen einstellen",
+        icon="mdi:bacteria-outline",
+        entity_category=EntityCategory.CONFIG,
         options=tuple(LEGIONELLEN_OPTIONS.values()),
         register=13,
         state_key="legionellen",
@@ -51,6 +56,8 @@ SELECT_DESCRIPTIONS: tuple[BWWPSelectDescription, ...] = (
     BWWPSelectDescription(
         key="pv_modus_control",
         name="PV Modus einstellen",
+        icon="mdi:solar-power-variant-outline",
+        entity_category=EntityCategory.CONFIG,
         options=tuple(PV_MODUS_OPTIONS.values()),
         register=17,
         state_key="pv_modus",
@@ -59,6 +66,8 @@ SELECT_DESCRIPTIONS: tuple[BWWPSelectDescription, ...] = (
     BWWPSelectDescription(
         key="ferien_control",
         name="Ferienmodus einstellen",
+        icon="mdi:beach",
+        entity_category=EntityCategory.CONFIG,
         options=tuple(FERIEN_OPTIONS.values()),
         register=20,
         state_key="ferien",

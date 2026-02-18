@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RuntimeData
@@ -30,6 +31,8 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     BWWPNumberDescription(
         key="setpoint_control",
         name="Solltemperatur einstellen",
+        icon="mdi:thermometer-chevron-up",
+        entity_category=EntityCategory.CONFIG,
         native_min_value=20,
         native_max_value=DEFAULT_SETPOINT_MAX,
         native_step=1,
@@ -40,6 +43,8 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     BWWPNumberDescription(
         key="t_min_control",
         name="T min einstellen",
+        icon="mdi:thermometer-low",
+        entity_category=EntityCategory.CONFIG,
         native_min_value=20,
         native_max_value=80,
         native_step=1,
@@ -50,6 +55,8 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     BWWPNumberDescription(
         key="t2_min_control",
         name="T2 min einstellen",
+        icon="mdi:thermometer-low",
+        entity_category=EntityCategory.CONFIG,
         native_min_value=20,
         native_max_value=80,
         native_step=1,
@@ -60,6 +67,8 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     BWWPNumberDescription(
         key="abwesenheitstage_control",
         name="Abwesenheitstage einstellen",
+        icon="mdi:calendar-edit",
+        entity_category=EntityCategory.CONFIG,
         native_min_value=0,
         native_max_value=30,
         native_step=1,
@@ -70,6 +79,9 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     BWWPNumberDescription(
         key="start_hour_control",
         name="Startzeit Stunde",
+        icon="mdi:clock-start",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         native_min_value=0,
         native_max_value=23,
         native_step=1,
@@ -79,6 +91,9 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     BWWPNumberDescription(
         key="start_minute_control",
         name="Startzeit Minute",
+        icon="mdi:clock-start",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         native_min_value=0,
         native_max_value=59,
         native_step=1,
@@ -88,6 +103,9 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     BWWPNumberDescription(
         key="stop_hour_control",
         name="Stoppzeit Stunde",
+        icon="mdi:clock-end",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         native_min_value=0,
         native_max_value=23,
         native_step=1,
@@ -97,6 +115,9 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     BWWPNumberDescription(
         key="stop_minute_control",
         name="Stoppzeit Minute",
+        icon="mdi:clock-end",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         native_min_value=0,
         native_max_value=59,
         native_step=1,

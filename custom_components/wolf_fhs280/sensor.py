@@ -80,10 +80,26 @@ SENSORS: tuple[BWWPSensorDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    BWWPSensorDescription(key="kompressor", name="Kompressor"),
-    BWWPSensorDescription(key="heizstab", name="Heizstab"),
-    BWWPSensorDescription(key="betriebsstatus", name="Betriebsstatus"),
-    BWWPSensorDescription(key="ventilator", name="Ventilator"),
+    BWWPSensorDescription(
+        key="kompressor",
+        name="Kompressor",
+        icon="mdi:engine-outline",
+    ),
+    BWWPSensorDescription(
+        key="heizstab",
+        name="Heizstab",
+        icon="mdi:radiator",
+    ),
+    BWWPSensorDescription(
+        key="betriebsstatus",
+        name="Betriebsstatus",
+        icon="mdi:heat-pump-outline",
+    ),
+    BWWPSensorDescription(
+        key="ventilator",
+        name="Ventilator",
+        icon="mdi:fan",
+    ),
 )
 
 

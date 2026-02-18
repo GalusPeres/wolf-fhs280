@@ -15,7 +15,8 @@ Custom integration for Wolf FHS280 via Modbus TCP.
   - Timeout
 - Exposes:
   - Sensors (temperatures and key status values)
-  - Writable numbers (setpoint, times, days)
+  - Writable numbers (setpoint, limits, days)
+  - Writable time entities (start/stop time, current clock)
   - Writable selects (mode, legionella, PV mode, holiday mode)
   - Writable switches (timer, boost)
 

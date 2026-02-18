@@ -26,6 +26,7 @@ PLATFORMS: Final = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SWITCH,
+    Platform.TIME,
 ]
 
 RegisterType = Literal["holding", "input"]
@@ -43,6 +44,8 @@ class RegisterDefinition:
 
 
 READ_REGISTERS: Final[tuple[RegisterDefinition, ...]] = (
+    RegisterDefinition("current_h", 0, "holding"),
+    RegisterDefinition("current_min", 1, "holding"),
     RegisterDefinition("t_setpoint", 4, "holding"),
     RegisterDefinition("t_min", 5, "holding"),
     RegisterDefinition("t2_min", 6, "holding"),

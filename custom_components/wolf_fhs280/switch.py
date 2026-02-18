@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RuntimeData
@@ -28,12 +29,16 @@ SWITCH_DESCRIPTIONS: tuple[BWWPSwitchDescription, ...] = (
     BWWPSwitchDescription(
         key="timer_control",
         name="Timer schalten",
+        icon="mdi:timer-outline",
+        entity_category=EntityCategory.CONFIG,
         register=7,
         state_key="timer_raw",
     ),
     BWWPSwitchDescription(
         key="boost_control",
         name="Boost schalten",
+        icon="mdi:rocket-launch-outline",
+        entity_category=EntityCategory.CONFIG,
         register=22,
         state_key="boost_raw",
     ),
