@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription, NumberMode
@@ -15,7 +14,7 @@ from . import RuntimeData
 from .const import DOMAIN
 from .entity import BWWPBaseEntity
 
-WRITE_SETTLE_SECONDS = 0.5
+WRITE_REFRESH_DELAY_SECONDS = 0.2
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -124,9 +123,10 @@ class BWWPNumber(BWWPBaseEntity, NumberEntity):
         return float(value)
 
     async def async_set_native_value(self, value: float) -> None:
+        rounded_value = int(round(value))
         await self._hub.async_write_register(
             address=self.entity_description.register,
-            value=int(round(value)),
+            value=rounded_value,
         )
-        await asyncio.sleep(WRITE_SETTLE_SECONDS)
-        await self.coordinator.async_request_refresh()
+        self._apply_local_update({self.entity_description.state_key: rounded_value})
+        self._schedule_background_refresh(WRITE_REFRESH_DELAY_SECONDS)

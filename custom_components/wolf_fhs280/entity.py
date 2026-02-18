@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
+from typing import Any
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -44,3 +47,19 @@ class BWWPBaseEntity(CoordinatorEntity[BWWPDataUpdateCoordinator]):
             configuration_url=f"http://{host}" if host else None,
             sw_version=f"{host}:{port} / Modbus ID {slave_id}",
         )
+
+    def _apply_local_update(self, updates: dict[str, Any]) -> None:
+        """Update coordinator data immediately so UI reflects writes quickly."""
+        merged = dict(self.coordinator.data or {})
+        merged.update(updates)
+        self.coordinator.async_set_updated_data(merged)
+
+    def _schedule_background_refresh(self, delay_seconds: float = 0.2) -> None:
+        """Refresh values in background without blocking the service call."""
+
+        async def _refresh_later() -> None:
+            if delay_seconds > 0:
+                await asyncio.sleep(delay_seconds)
+            await self.coordinator.async_request_refresh()
+
+        self.hass.async_create_task(_refresh_later())
