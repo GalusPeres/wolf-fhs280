@@ -5,13 +5,21 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import timedelta
-from typing import Any
+from typing import Any, TYPE_CHECKING
 
+from homeassistant.components.modbus.const import (
+    CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_REGISTER_INPUT,
+    CALL_TYPE_WRITE_REGISTER,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from pymodbus.client import AsyncModbusTcpClient
 from pymodbus.exceptions import ModbusException
 
 from .const import ENUM_MAPPINGS, ENUM_SOURCE_KEYS, READ_REGISTERS
+
+if TYPE_CHECKING:
+    from homeassistant.components.modbus.modbus import ModbusHub as HAModbusHub
 
 LOGGER = logging.getLogger(__name__)
 
@@ -59,20 +67,30 @@ class BWWPModbusHub:
         """Close current connection so next call forces reconnect."""
         self._client.close()
 
-    async def async_read_register(self, register_type: str, address: int) -> int:
-        """Read one register (holding or input)."""
+    async def async_read_registers(
+        self, register_type: str, address: int, count: int
+    ) -> list[int]:
+        """Read multiple contiguous registers."""
+        if count < 1:
+            return []
+
         async with self._lock:
             last_error: Exception | None = None
             for attempt in range(2):
                 try:
                     await self._ensure_connection()
                     if register_type == "holding":
-                        result = await self._async_read_holding_register(address)
+                        result = await self._async_read_holding_registers(address, count)
                     else:
-                        result = await self._async_read_input_register(address)
+                        result = await self._async_read_input_registers(address, count)
 
                     if not result.isError():
-                        return int(result.registers[0])
+                        registers = getattr(result, "registers", None) or []
+                        if len(registers) < count:
+                            raise ModbusException(
+                                f"Expected {count} registers but got {len(registers)}"
+                            )
+                        return [int(value) for value in registers[:count]]
 
                     last_error = ModbusException(str(result))
                 except (OSError, asyncio.TimeoutError, ModbusException) as err:
@@ -82,6 +100,11 @@ class BWWPModbusHub:
                     await self._reset_connection()
 
             raise last_error or ModbusException("Unknown Modbus read error")
+
+    async def async_read_register(self, register_type: str, address: int) -> int:
+        """Read one register (holding or input)."""
+        registers = await self.async_read_registers(register_type, address, 1)
+        return int(registers[0])
 
     async def async_write_register(self, address: int, value: int) -> None:
         """Write one holding register."""
@@ -104,33 +127,33 @@ class BWWPModbusHub:
 
             raise last_error or ModbusException("Unknown Modbus write error")
 
-    async def _async_read_holding_register(self, address: int):
-        """Read one holding register with pymodbus API compatibility."""
+    async def _async_read_holding_registers(self, address: int, count: int):
+        """Read holding registers with pymodbus API compatibility."""
         try:
             return await self._client.read_holding_registers(
                 address=address,
-                count=1,
+                count=count,
                 device_id=self._slave_id,
             )
         except TypeError:
             return await self._client.read_holding_registers(
                 address=address,
-                count=1,
+                count=count,
                 slave=self._slave_id,
             )
 
-    async def _async_read_input_register(self, address: int):
-        """Read one input register with pymodbus API compatibility."""
+    async def _async_read_input_registers(self, address: int, count: int):
+        """Read input registers with pymodbus API compatibility."""
         try:
             return await self._client.read_input_registers(
                 address=address,
-                count=1,
+                count=count,
                 device_id=self._slave_id,
             )
         except TypeError:
             return await self._client.read_input_registers(
                 address=address,
-                count=1,
+                count=count,
                 slave=self._slave_id,
             )
 
@@ -148,6 +171,83 @@ class BWWPModbusHub:
                 value=value,
                 slave=self._slave_id,
             )
+
+
+class BWWPSharedModbusHub:
+    """Adapter that reuses Home Assistant's existing modbus hub."""
+
+    def __init__(self, hub: "HAModbusHub", hub_name: str, slave_id: int) -> None:
+        self._hub = hub
+        self._hub_name = hub_name
+        self._slave_id = slave_id
+
+    @property
+    def host(self) -> str | None:
+        params = getattr(self._hub, "_pb_params", {})
+        host = params.get("host")
+        return str(host) if host is not None else None
+
+    @property
+    def port(self) -> int | None:
+        params = getattr(self._hub, "_pb_params", {})
+        port = params.get("port")
+        try:
+            return int(port) if port is not None else None
+        except (TypeError, ValueError):
+            return None
+
+    @property
+    def slave_id(self) -> int:
+        return self._slave_id
+
+    async def async_close(self) -> None:
+        """Shared hub lifecycle is handled by Home Assistant."""
+        return None
+
+    async def async_read_registers(
+        self, register_type: str, address: int, count: int
+    ) -> list[int]:
+        """Read multiple contiguous registers through HA modbus hub."""
+        call_type = (
+            CALL_TYPE_REGISTER_HOLDING
+            if register_type == "holding"
+            else CALL_TYPE_REGISTER_INPUT
+        )
+        result = await self._hub.async_pb_call(self._slave_id, address, count, call_type)
+        if result is None:
+            raise ModbusException(
+                f"Read failed for hub={self._hub_name} slave={self._slave_id} address={address}"
+            )
+        if result.isError():
+            raise ModbusException(str(result))
+
+        registers = getattr(result, "registers", None) or []
+        if len(registers) < count:
+            raise ModbusException(
+                f"Expected {count} registers but got {len(registers)}"
+            )
+        return [int(value) for value in registers[:count]]
+
+    async def async_read_register(self, register_type: str, address: int) -> int:
+        """Read one register through HA modbus hub."""
+        registers = await self.async_read_registers(register_type, address, 1)
+        return int(registers[0])
+
+    async def async_write_register(self, address: int, value: int) -> None:
+        """Write one holding register through HA modbus hub."""
+        write_value = value & 0xFFFF
+        result = await self._hub.async_pb_call(
+            self._slave_id,
+            address,
+            write_value,
+            CALL_TYPE_WRITE_REGISTER,
+        )
+        if result is None:
+            raise ModbusException(
+                f"Write failed for hub={self._hub_name} slave={self._slave_id} address={address}"
+            )
+        if hasattr(result, "isError") and result.isError():
+            raise ModbusException(str(result))
 
 
 class BWWPDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -171,32 +271,51 @@ class BWWPDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         data: dict[str, Any] = {}
         failed_reads = 0
 
+        by_type: dict[str, list[Any]] = {"holding": [], "input": []}
         for definition in READ_REGISTERS:
-            try:
-                raw = await self.hub.async_read_register(
-                    register_type=definition.register_type,
-                    address=definition.address,
-                )
-            except ModbusException as err:
-                failed_reads += 1
-                LOGGER.debug(
-                    "Read failed (%s @ %s): %s",
-                    definition.key,
-                    definition.address,
-                    err,
-                )
-                data[definition.key] = None
-                continue
+            by_type[definition.register_type].append(definition)
 
-            signed_value = _to_signed_int16(raw)
-            scaled_value = signed_value * definition.scale
-            if definition.precision is not None:
-                scaled_value = round(scaled_value, definition.precision)
+        for register_type, definitions in by_type.items():
+            definitions.sort(key=lambda item: item.address)
+            for block in _contiguous_blocks(definitions):
+                block_start = block[0].address
+                block_count = block[-1].address - block_start + 1
+                try:
+                    raw_values = await self.hub.async_read_registers(
+                        register_type=register_type,
+                        address=block_start,
+                        count=block_count,
+                    )
+                except ModbusException as err:
+                    LOGGER.debug(
+                        "Block read failed (%s @ %s len %s): %s",
+                        register_type,
+                        block_start,
+                        block_count,
+                        err,
+                    )
+                    for definition in block:
+                        try:
+                            raw = await self.hub.async_read_register(
+                                register_type=definition.register_type,
+                                address=definition.address,
+                            )
+                        except ModbusException as single_err:
+                            failed_reads += 1
+                            LOGGER.debug(
+                                "Read failed (%s @ %s): %s",
+                                definition.key,
+                                definition.address,
+                                single_err,
+                            )
+                            data[definition.key] = None
+                        else:
+                            _store_scaled_value(data, definition, raw)
+                    continue
 
-            if definition.scale == 1.0 and definition.precision is None:
-                data[definition.key] = int(scaled_value)
-            else:
-                data[definition.key] = scaled_value
+                for definition in block:
+                    raw = raw_values[definition.address - block_start]
+                    _store_scaled_value(data, definition, raw)
 
         if failed_reads == len(READ_REGISTERS):
             raise UpdateFailed("No register could be read from BWWP")
@@ -218,3 +337,35 @@ def _to_signed_int16(value: int) -> int:
     if value > 0x7FFF:
         return value - 0x10000
     return value
+
+
+def _store_scaled_value(data: dict[str, Any], definition, raw: int) -> None:
+    """Apply scaling/precision and write to coordinator state."""
+    signed_value = _to_signed_int16(raw)
+    scaled_value = signed_value * definition.scale
+    if definition.precision is not None:
+        scaled_value = round(scaled_value, definition.precision)
+
+    if definition.scale == 1.0 and definition.precision is None:
+        data[definition.key] = int(scaled_value)
+    else:
+        data[definition.key] = scaled_value
+
+
+def _contiguous_blocks(definitions: list[Any]) -> list[list[Any]]:
+    """Split register definitions into contiguous address blocks."""
+    if not definitions:
+        return []
+
+    blocks: list[list[Any]] = []
+    current: list[Any] = [definitions[0]]
+
+    for definition in definitions[1:]:
+        if definition.address == current[-1].address + 1:
+            current.append(definition)
+            continue
+        blocks.append(current)
+        current = [definition]
+
+    blocks.append(current)
+    return blocks
