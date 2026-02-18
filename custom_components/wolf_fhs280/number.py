@@ -13,10 +13,11 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RuntimeData
-from .const import CONF_SETPOINT_MAX, DEFAULT_SETPOINT_MAX, DOMAIN
+from .const import DOMAIN
 from .entity import BWWPBaseEntity
 
 WRITE_REFRESH_DELAY_SECONDS = 0.2
+FALLBACK_SETPOINT_MAX = 55
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -34,7 +35,7 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
         icon="mdi:thermometer-chevron-up",
         entity_category=EntityCategory.CONFIG,
         native_min_value=20,
-        native_max_value=DEFAULT_SETPOINT_MAX,
+        native_max_value=80,
         native_step=1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         register=4,
@@ -109,15 +110,21 @@ class BWWPNumber(BWWPBaseEntity, NumberEntity):
         self._attr_mode = NumberMode.BOX
         self._attr_suggested_display_precision = 0
         self._hub = runtime.hub
-        if description.key == "setpoint_control":
-            configured_max = int(
-                entry.options.get(
-                    CONF_SETPOINT_MAX,
-                    entry.data.get(CONF_SETPOINT_MAX, DEFAULT_SETPOINT_MAX),
-                )
-            )
-            configured_max = max(20, min(configured_max, 80))
-            self._attr_native_max_value = float(configured_max)
+
+    @property
+    def native_max_value(self) -> float | None:
+        if self.entity_description.key != "setpoint_control":
+            return self.entity_description.native_max_value
+
+        raw_limit = self.coordinator.data.get("t_max")
+        try:
+            limit = int(raw_limit)
+        except (TypeError, ValueError):
+            limit = FALLBACK_SETPOINT_MAX
+
+        min_value = int(float(self.entity_description.native_min_value or 20))
+        limit = max(min_value, min(limit, 80))
+        return float(limit)
 
     @property
     def native_value(self) -> float | None:

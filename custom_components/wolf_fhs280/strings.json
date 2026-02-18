@@ -6,10 +6,9 @@
         "description": "Use an existing Home Assistant modbus hub from configuration.yaml.",
         "data": {
           "name": "Device name",
-          "hub": "Modbus hub name (YAML)",
+          "hub": "Modbus hub name from YAML (exact)",
           "slave_id": "Modbus ID",
-          "scan_interval": "Scan interval (seconds)",
-          "setpoint_max": "Max setpoint (°C)"
+          "scan_interval": "Scan interval (seconds)"
         }
       }
     },
@@ -28,10 +27,9 @@
         "description": "Change modbus hub and polling settings.",
         "data": {
           "name": "Device name",
-          "hub": "Modbus hub name (YAML)",
+          "hub": "Modbus hub name from YAML (exact)",
           "slave_id": "Modbus ID",
-          "scan_interval": "Scan interval (seconds)",
-          "setpoint_max": "Max setpoint (°C)"
+          "scan_interval": "Scan interval (seconds)"
         }
       }
     },

@@ -49,16 +49,6 @@ TIME_DESCRIPTIONS: tuple[BWWPTimeDescription, ...] = (
         hour_state_key="stop_h",
         minute_state_key="stop_min",
     ),
-    BWWPTimeDescription(
-        key="current_time_control",
-        name="Aktuelle Uhrzeit",
-        icon="mdi:clock-outline",
-        entity_category=EntityCategory.CONFIG,
-        hour_register=105,
-        minute_register=104,
-        hour_state_key="current_h",
-        minute_state_key="current_min",
-    ),
 )
 
 

@@ -6,10 +6,9 @@
         "description": "Verwendet einen vorhandenen Home-Assistant-Modbus-Hub aus der configuration.yaml.",
         "data": {
           "name": "Ger\u00e4tename",
-          "hub": "Modbus-Hub-Name (YAML)",
+          "hub": "Modbus-Hub-Name aus YAML (exakt)",
           "slave_id": "Modbus-ID",
-          "scan_interval": "Abfrageintervall (Sekunden)",
-          "setpoint_max": "Max. Solltemperatur (\u00b0C)"
+          "scan_interval": "Abfrageintervall (Sekunden)"
         }
       }
     },
@@ -28,10 +27,9 @@
         "description": "Modbus-Hub und Abfrageeinstellungen \u00e4ndern.",
         "data": {
           "name": "Ger\u00e4tename",
-          "hub": "Modbus-Hub-Name (YAML)",
+          "hub": "Modbus-Hub-Name aus YAML (exakt)",
           "slave_id": "Modbus-ID",
-          "scan_interval": "Abfrageintervall (Sekunden)",
-          "setpoint_max": "Max. Solltemperatur (\u00b0C)"
+          "scan_interval": "Abfrageintervall (Sekunden)"
         }
       }
     },

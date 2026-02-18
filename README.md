@@ -29,14 +29,14 @@ You can keep your other modbus sensors/meters in the same `modbus:` block.
 - Config flow (UI setup in Home Assistant)
 - Setup fields in UI:
   - Device name
-  - Modbus hub name (from YAML, e.g. `waveshare_modbus_gateway`)
+  - Modbus hub name from YAML (exact, e.g. `waveshare_modbus_gateway`)
   - Modbus ID (slave ID, e.g. `3`)
   - Poll interval
-  - Max setpoint
 - Exposes:
   - Sensors (temperatures and key status values)
-  - Writable numbers (setpoint, limits, days)
-  - Writable time entities (start/stop time, current clock)
+  - Writable numbers (setpoint, limits, days). Setpoint is limited by device `t_max`.
+  - Writable time entities (start/stop time)
+  - Button to sync device clock once with Home Assistant time
   - Writable selects (mode, legionella, PV mode, holiday mode)
   - Writable switches (timer, boost)
 
@@ -56,7 +56,6 @@ You can keep your other modbus sensors/meters in the same `modbus:` block.
 4. Search for `Wolf FHS280`.
 5. Enter:
    - Device name
-   - Modbus hub name from YAML (e.g. `waveshare_modbus_gateway`)
+   - Modbus hub name from YAML (exact, e.g. `waveshare_modbus_gateway`)
    - Modbus ID (e.g. `3`)
    - Poll interval
-   - Max setpoint

@@ -15,12 +15,10 @@ from .const import (
     CONF_HUB,
     CONF_NAME,
     CONF_SCAN_INTERVAL,
-    CONF_SETPOINT_MAX,
     CONF_SLAVE_ID,
     DEFAULT_HUB,
     DEFAULT_NAME,
     DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SETPOINT_MAX,
     DEFAULT_SLAVE_ID,
     DOMAIN,
 )
@@ -65,10 +63,6 @@ def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
                 CONF_SCAN_INTERVAL,
                 default=defaults.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
             ): _number_box(min_value=1, max_value=3600, step=1),
-            vol.Required(
-                CONF_SETPOINT_MAX,
-                default=defaults.get(CONF_SETPOINT_MAX, DEFAULT_SETPOINT_MAX),
-            ): _number_box(min_value=20, max_value=80, step=1),
         }
     )
 
@@ -81,7 +75,6 @@ def _normalize_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
         CONF_HUB: str(user_input[CONF_HUB]).strip(),
         CONF_SLAVE_ID: int(user_input[CONF_SLAVE_ID]),
         CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
-        CONF_SETPOINT_MAX: int(user_input[CONF_SETPOINT_MAX]),
     }
 
 

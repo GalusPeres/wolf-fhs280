@@ -13,19 +13,18 @@ CONF_NAME: Final = "name"
 CONF_HUB: Final = "hub"
 CONF_SCAN_INTERVAL: Final = "scan_interval"
 CONF_SLAVE_ID: Final = "slave_id"
-CONF_SETPOINT_MAX: Final = "setpoint_max"
 
 DEFAULT_NAME: Final = "Wolf FHS280"
 DEFAULT_HUB: Final = "waveshare_modbus_gateway"
 DEFAULT_SCAN_INTERVAL: Final = 30
 DEFAULT_SLAVE_ID: Final = 3
-DEFAULT_SETPOINT_MAX: Final = 55
 
 PLATFORMS: Final = [
     Platform.SENSOR,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SWITCH,
+    Platform.BUTTON,
     Platform.TIME,
 ]
 
@@ -63,8 +62,6 @@ READ_REGISTERS: Final[tuple[RegisterDefinition, ...]] = (
     RegisterDefinition("boost_raw", 22, "holding"),
     RegisterDefinition("t_max", 28, "holding"),
     RegisterDefinition("legionellen_tage", 33, "holding"),
-    RegisterDefinition("current_min", 104, "holding"),
-    RegisterDefinition("current_h", 105, "holding"),
     RegisterDefinition("t1", 7, "input", scale=0.1, precision=1),
     RegisterDefinition("t2", 8, "input", scale=0.1, precision=1),
     RegisterDefinition("kompressor_raw", 9, "input"),
