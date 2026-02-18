@@ -57,7 +57,9 @@ class BWWPModbusHub:
     async def _ensure_connection(self) -> None:
         if self._is_connected():
             return
-        connected = await self._client.connect()
+        connected = await asyncio.wait_for(
+            self._client.connect(), timeout=self._request_timeout()
+        )
         if not connected:
             raise ModbusException(
                 f"Unable to connect to Modbus target {self._host}:{self._port}"
@@ -66,6 +68,10 @@ class BWWPModbusHub:
     async def _reset_connection(self) -> None:
         """Close current connection so next call forces reconnect."""
         self._client.close()
+
+    def _request_timeout(self) -> float:
+        """Hard upper bound for one network call to avoid hanging tasks."""
+        return max(0.5, float(self._timeout)) + 1.0
 
     async def async_read_registers(
         self, register_type: str, address: int, count: int
@@ -130,46 +136,64 @@ class BWWPModbusHub:
     async def _async_read_holding_registers(self, address: int, count: int):
         """Read holding registers with pymodbus API compatibility."""
         try:
-            return await self._client.read_holding_registers(
-                address=address,
-                count=count,
-                device_id=self._slave_id,
+            return await asyncio.wait_for(
+                self._client.read_holding_registers(
+                    address=address,
+                    count=count,
+                    device_id=self._slave_id,
+                ),
+                timeout=self._request_timeout(),
             )
         except TypeError:
-            return await self._client.read_holding_registers(
-                address=address,
-                count=count,
-                slave=self._slave_id,
+            return await asyncio.wait_for(
+                self._client.read_holding_registers(
+                    address=address,
+                    count=count,
+                    slave=self._slave_id,
+                ),
+                timeout=self._request_timeout(),
             )
 
     async def _async_read_input_registers(self, address: int, count: int):
         """Read input registers with pymodbus API compatibility."""
         try:
-            return await self._client.read_input_registers(
-                address=address,
-                count=count,
-                device_id=self._slave_id,
+            return await asyncio.wait_for(
+                self._client.read_input_registers(
+                    address=address,
+                    count=count,
+                    device_id=self._slave_id,
+                ),
+                timeout=self._request_timeout(),
             )
         except TypeError:
-            return await self._client.read_input_registers(
-                address=address,
-                count=count,
-                slave=self._slave_id,
+            return await asyncio.wait_for(
+                self._client.read_input_registers(
+                    address=address,
+                    count=count,
+                    slave=self._slave_id,
+                ),
+                timeout=self._request_timeout(),
             )
 
     async def _async_write_holding_register(self, address: int, value: int):
         """Write one holding register with pymodbus API compatibility."""
         try:
-            return await self._client.write_register(
-                address=address,
-                value=value,
-                device_id=self._slave_id,
+            return await asyncio.wait_for(
+                self._client.write_register(
+                    address=address,
+                    value=value,
+                    device_id=self._slave_id,
+                ),
+                timeout=self._request_timeout(),
             )
         except TypeError:
-            return await self._client.write_register(
-                address=address,
-                value=value,
-                slave=self._slave_id,
+            return await asyncio.wait_for(
+                self._client.write_register(
+                    address=address,
+                    value=value,
+                    slave=self._slave_id,
+                ),
+                timeout=self._request_timeout(),
             )
 
 
