@@ -29,7 +29,7 @@ class BWWPButtonDescription(ButtonEntityDescription):
 BUTTON_DESCRIPTIONS: tuple[BWWPButtonDescription, ...] = (
     BWWPButtonDescription(
         key="sync_device_clock",
-        name="Uhrzeit synchronisieren",
+        name="Zeit - Uhr synchronisieren",
         icon="mdi:clock-sync",
         entity_category=EntityCategory.CONFIG,
         hour_register=105,

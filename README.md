@@ -33,10 +33,10 @@ You can keep your other modbus sensors/meters in the same `modbus:` block.
   - Modbus ID (slave ID, e.g. `3`)
   - Poll interval
 - Exposes:
-  - Sensors (temperatures and key status values)
+  - Sensors (grouped by naming: `Temperatur - ...`, `Status - ...`, `Zeit - ...`)
   - Read-only sensor for device clock (`Geräteuhrzeit`)
-  - Writable numbers (setpoint, limits, days). Setpoint is limited by device `t_max`.
-  - Writable time entities (start/stop time)
+  - Writable numbers (grouped; temperature controls and operation controls)
+  - Writable time entities (start/stop time, grouped as `Zeit - ...`)
   - Button to sync device clock once with Home Assistant time
   - Writable selects (mode, legionella, PV mode, holiday mode)
   - Writable switches (timer, boost)
