@@ -4,23 +4,25 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from homeassistant.components.modbus import get_hub
-from homeassistant.components.modbus.modbus import DATA_MODBUS_HUBS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
-    CONF_HUB,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE_ID,
+    CONF_TIMEOUT,
+    DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SLAVE_ID,
+    DEFAULT_TIMEOUT,
     DOMAIN,
     PLATFORMS,
 )
 from .coordinator import BWWPDataUpdateCoordinator, BWWPModbusHub
+
+LEGACY_CONF_HUB = "hub"
 
 
 @dataclass
@@ -35,22 +37,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up BWWP from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    modbus_hubs = hass.data.get(DATA_MODBUS_HUBS, {})
-    if not modbus_hubs:
+    host = _entry_value(entry, CONF_HOST)
+    port = int(_entry_value(entry, CONF_PORT, DEFAULT_PORT))
+
+    if not host:
+        host, legacy_port = _resolve_legacy_connection(hass, entry)
+        if legacy_port is not None and _entry_value(entry, CONF_PORT) is None:
+            port = legacy_port
+
+    if not host:
         raise ConfigEntryNotReady(
-            "No Home Assistant modbus hub is configured. Configure modbus: first."
+            "No host configured for Wolf FHS280 entry. Reconfigure integration options."
         )
 
-    hub_name = _resolve_hub_name(hass, entry)
-    try:
-        modbus_hub = get_hub(hass, hub_name)
-    except KeyError as err:
-        raise ConfigEntryNotReady(f"Configured modbus hub '{hub_name}' not found") from err
-
     slave_id = int(_entry_value(entry, CONF_SLAVE_ID, DEFAULT_SLAVE_ID))
-    scan_interval = int(_entry_value(entry, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+    timeout = float(_entry_value(entry, CONF_TIMEOUT, DEFAULT_TIMEOUT))
+    scan_interval = int(
+        _entry_value(entry, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    )
 
-    hub = BWWPModbusHub(hub=modbus_hub, hub_name=hub_name, slave_id=slave_id)
+    hub = BWWPModbusHub(host=str(host), port=port, slave_id=slave_id, timeout=timeout)
     coordinator = BWWPDataUpdateCoordinator(
         hass=hass,
         hub=hub,
@@ -90,33 +96,32 @@ def _entry_value(entry: ConfigEntry, key: str, default=None):
     return entry.options.get(key, entry.data.get(key, default))
 
 
-def _resolve_hub_name(hass: HomeAssistant, entry: ConfigEntry) -> str:
-    """Resolve configured modbus hub with backward-compatible fallback."""
-    hubs = hass.data.get(DATA_MODBUS_HUBS, {})
+def _resolve_legacy_connection(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> tuple[str | None, int | None]:
+    """Resolve host/port from previous hub-based entries."""
+    legacy_hub = _entry_value(entry, LEGACY_CONF_HUB)
+    if not legacy_hub:
+        return None, None
 
-    configured_hub = _entry_value(entry, CONF_HUB)
-    if configured_hub and configured_hub in hubs:
-        return configured_hub
+    try:
+        from homeassistant.components.modbus import get_hub
 
-    # Backward compatibility for older entries that stored host/port.
-    legacy_host = _entry_value(entry, CONF_HOST)
-    legacy_port = _entry_value(entry, CONF_PORT)
-    if legacy_host:
-        legacy_port_str = str(legacy_port) if legacy_port is not None else None
-        for name, hub in hubs.items():
-            params = getattr(hub, "_pb_params", {})
-            if str(params.get("host", "")) != str(legacy_host):
-                continue
-            if legacy_port_str and str(params.get("port")) != legacy_port_str:
-                continue
-            return name
+        modbus_hub = get_hub(hass, str(legacy_hub))
+    except Exception:
+        return None, None
 
-    if len(hubs) == 1:
-        return next(iter(hubs))
+    params = getattr(modbus_hub, "_pb_params", {})
+    host = params.get("host")
+    port = params.get("port")
+    parsed_port = None
 
-    if configured_hub:
-        raise ConfigEntryNotReady(
-            f"Configured modbus hub '{configured_hub}' not found."
-        )
+    if port is not None:
+        try:
+            parsed_port = int(port)
+        except (TypeError, ValueError):
+            parsed_port = None
 
-    raise ConfigEntryNotReady("No modbus hub selected for this entry.")
+    if host is None:
+        return None, parsed_port
+    return str(host), parsed_port

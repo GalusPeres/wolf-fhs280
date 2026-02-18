@@ -1,96 +1,152 @@
-"""Coordinator and Modbus adapter for Wolf FHS280."""
+"""Coordinator and Modbus client for Wolf FHS280."""
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import timedelta
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
-from homeassistant.components.modbus.const import (
-    CALL_TYPE_REGISTER_HOLDING,
-    CALL_TYPE_REGISTER_INPUT,
-    CALL_TYPE_WRITE_REGISTER,
-)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from pymodbus.client import AsyncModbusTcpClient
 from pymodbus.exceptions import ModbusException
 
 from .const import ENUM_MAPPINGS, ENUM_SOURCE_KEYS, READ_REGISTERS
-
-if TYPE_CHECKING:
-    from homeassistant.components.modbus.modbus import ModbusHub as HAModbusHub
 
 LOGGER = logging.getLogger(__name__)
 
 
 class BWWPModbusHub:
-    """Thin async wrapper around Home Assistant's shared ModbusHub."""
+    """Thin async wrapper around pymodbus TCP client."""
 
-    def __init__(self, hub: "HAModbusHub", hub_name: str, slave_id: int) -> None:
-        self._hub = hub
-        self._hub_name = hub_name
+    def __init__(self, host: str, port: int, slave_id: int, timeout: float) -> None:
+        self._host = host
+        self._port = port
         self._slave_id = slave_id
+        self._timeout = timeout
+        self._client = AsyncModbusTcpClient(host=host, port=port, timeout=timeout)
+        self._lock = asyncio.Lock()
 
     @property
-    def hub_name(self) -> str:
-        return self._hub_name
+    def host(self) -> str:
+        return self._host
+
+    @property
+    def port(self) -> int:
+        return self._port
 
     @property
     def slave_id(self) -> int:
         return self._slave_id
 
-    @property
-    def host(self) -> str | None:
-        params = getattr(self._hub, "_pb_params", {})
-        host = params.get("host")
-        return str(host) if host is not None else None
-
-    @property
-    def port(self) -> int | None:
-        params = getattr(self._hub, "_pb_params", {})
-        port = params.get("port")
-        try:
-            return int(port) if port is not None else None
-        except (TypeError, ValueError):
-            return None
-
     async def async_close(self) -> None:
-        """No-op: shared modbus hub lifecycle is handled by HA modbus integration."""
-        return None
+        """Close network connection."""
+        self._client.close()
+
+    def _is_connected(self) -> bool:
+        return bool(getattr(self._client, "connected", False))
+
+    async def _ensure_connection(self) -> None:
+        if self._is_connected():
+            return
+        connected = await self._client.connect()
+        if not connected:
+            raise ModbusException(
+                f"Unable to connect to Modbus target {self._host}:{self._port}"
+            )
+
+    async def _reset_connection(self) -> None:
+        """Close current connection so next call forces reconnect."""
+        self._client.close()
 
     async def async_read_register(self, register_type: str, address: int) -> int:
-        """Read one register (holding or input) via shared ModbusHub."""
-        call_type = (
-            CALL_TYPE_REGISTER_HOLDING
-            if register_type == "holding"
-            else CALL_TYPE_REGISTER_INPUT
-        )
+        """Read one register (holding or input)."""
+        async with self._lock:
+            last_error: Exception | None = None
+            for attempt in range(2):
+                try:
+                    await self._ensure_connection()
+                    if register_type == "holding":
+                        result = await self._async_read_holding_register(address)
+                    else:
+                        result = await self._async_read_input_register(address)
 
-        result = await self._hub.async_pb_call(self._slave_id, address, 1, call_type)
-        if result is None or not hasattr(result, "registers"):
-            raise ModbusException(
-                f"Read failed for hub={self._hub_name} slave={self._slave_id} address={address}"
-            )
+                    if not result.isError():
+                        return int(result.registers[0])
 
-        registers = getattr(result, "registers", None)
-        if not registers:
-            raise ModbusException(
-                f"No register data for hub={self._hub_name} slave={self._slave_id} address={address}"
-            )
+                    last_error = ModbusException(str(result))
+                except (OSError, asyncio.TimeoutError, ModbusException) as err:
+                    last_error = err
 
-        return int(registers[0])
+                if attempt == 0:
+                    await self._reset_connection()
+
+            raise last_error or ModbusException("Unknown Modbus read error")
 
     async def async_write_register(self, address: int, value: int) -> None:
-        """Write one holding register via shared ModbusHub."""
+        """Write one holding register."""
         write_value = value & 0xFFFF
-        result = await self._hub.async_pb_call(
-            self._slave_id,
-            address,
-            write_value,
-            CALL_TYPE_WRITE_REGISTER,
-        )
-        if result is None:
-            raise ModbusException(
-                f"Write failed for hub={self._hub_name} slave={self._slave_id} address={address}"
+        async with self._lock:
+            last_error: Exception | None = None
+            for attempt in range(2):
+                try:
+                    await self._ensure_connection()
+                    result = await self._async_write_holding_register(address, write_value)
+                    if not result.isError():
+                        return
+
+                    last_error = ModbusException(str(result))
+                except (OSError, asyncio.TimeoutError, ModbusException) as err:
+                    last_error = err
+
+                if attempt == 0:
+                    await self._reset_connection()
+
+            raise last_error or ModbusException("Unknown Modbus write error")
+
+    async def _async_read_holding_register(self, address: int):
+        """Read one holding register with pymodbus API compatibility."""
+        try:
+            return await self._client.read_holding_registers(
+                address=address,
+                count=1,
+                device_id=self._slave_id,
+            )
+        except TypeError:
+            return await self._client.read_holding_registers(
+                address=address,
+                count=1,
+                slave=self._slave_id,
+            )
+
+    async def _async_read_input_register(self, address: int):
+        """Read one input register with pymodbus API compatibility."""
+        try:
+            return await self._client.read_input_registers(
+                address=address,
+                count=1,
+                device_id=self._slave_id,
+            )
+        except TypeError:
+            return await self._client.read_input_registers(
+                address=address,
+                count=1,
+                slave=self._slave_id,
+            )
+
+    async def _async_write_holding_register(self, address: int, value: int):
+        """Write one holding register with pymodbus API compatibility."""
+        try:
+            return await self._client.write_register(
+                address=address,
+                value=value,
+                device_id=self._slave_id,
+            )
+        except TypeError:
+            return await self._client.write_register(
+                address=address,
+                value=value,
+                slave=self._slave_id,
             )
 
 

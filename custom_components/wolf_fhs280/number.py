@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import NumberEntity, NumberEntityDescription, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
@@ -13,6 +14,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import RuntimeData
 from .const import DOMAIN
 from .entity import BWWPBaseEntity
+
+WRITE_SETTLE_SECONDS = 0.5
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -110,6 +113,7 @@ class BWWPNumber(BWWPBaseEntity, NumberEntity):
         super().__init__(runtime.coordinator, entry, description.key)
         self.entity_description = description
         self._attr_name = description.name
+        self._attr_mode = NumberMode.BOX
         self._hub = runtime.hub
 
     @property
@@ -124,4 +128,5 @@ class BWWPNumber(BWWPBaseEntity, NumberEntity):
             address=self.entity_description.register,
             value=int(round(value)),
         )
+        await asyncio.sleep(WRITE_SETTLE_SECONDS)
         await self.coordinator.async_request_refresh()

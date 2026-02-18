@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -12,6 +13,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import RuntimeData
 from .const import DOMAIN
 from .entity import BWWPBaseEntity
+
+WRITE_SETTLE_SECONDS = 0.5
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -79,6 +82,7 @@ class BWWPSwitch(BWWPBaseEntity, SwitchEntity):
             address=self.entity_description.register,
             value=1,
         )
+        await asyncio.sleep(WRITE_SETTLE_SECONDS)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs) -> None:
@@ -86,4 +90,5 @@ class BWWPSwitch(BWWPBaseEntity, SwitchEntity):
             address=self.entity_description.register,
             value=0,
         )
+        await asyncio.sleep(WRITE_SETTLE_SECONDS)
         await self.coordinator.async_request_refresh()

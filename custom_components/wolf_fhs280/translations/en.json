@@ -3,18 +3,19 @@
     "step": {
       "user": {
         "title": "Wolf FHS280",
-        "description": "Configure Wolf FHS280 using an existing Home Assistant Modbus hub.",
+        "description": "Configure Modbus-TCP connection for Wolf FHS280.",
         "data": {
           "name": "Device name",
-          "hub": "Modbus hub name",
+          "host": "Converter IP",
+          "port": "Port",
           "slave_id": "Modbus ID",
-          "scan_interval": "Scan interval (seconds)"
+          "scan_interval": "Scan interval (seconds)",
+          "timeout": "Timeout (seconds)"
         }
       }
     },
     "error": {
       "cannot_connect": "Cannot connect to device",
-      "hub_not_found": "Selected Modbus hub was not found",
       "unknown": "Unexpected error"
     },
     "abort": {
@@ -25,18 +26,19 @@
     "step": {
       "init": {
         "title": "Wolf FHS280 options",
-        "description": "Change Modbus hub and polling settings.",
+        "description": "Change connection and polling settings.",
         "data": {
           "name": "Device name",
-          "hub": "Modbus hub name",
+          "host": "Converter IP",
+          "port": "Port",
           "slave_id": "Modbus ID",
-          "scan_interval": "Scan interval (seconds)"
+          "scan_interval": "Scan interval (seconds)",
+          "timeout": "Timeout (seconds)"
         }
       }
     },
     "error": {
       "cannot_connect": "Cannot connect to device",
-      "hub_not_found": "Selected Modbus hub was not found",
       "unknown": "Unexpected error"
     }
   }

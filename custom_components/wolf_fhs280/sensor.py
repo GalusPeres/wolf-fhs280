@@ -25,14 +25,7 @@ class BWWPSensorDescription(SensorEntityDescription):
     """Description for one BWWP sensor."""
 
 
-NUMERIC_SENSORS: tuple[BWWPSensorDescription, ...] = (
-    BWWPSensorDescription(
-        key="t_setpoint",
-        name="Temperatursoll",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
+SENSORS: tuple[BWWPSensorDescription, ...] = (
     BWWPSensorDescription(
         key="t_min",
         name="T min",
@@ -47,31 +40,6 @@ NUMERIC_SENSORS: tuple[BWWPSensorDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    BWWPSensorDescription(key="timer_raw", name="Timer Roh"),
-    BWWPSensorDescription(
-        key="start_h",
-        name="Startzeit h",
-        native_unit_of_measurement=UnitOfTime.HOURS,
-    ),
-    BWWPSensorDescription(
-        key="start_min",
-        name="Startzeit min",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-    ),
-    BWWPSensorDescription(
-        key="stop_h",
-        name="Stoppzeit h",
-        native_unit_of_measurement=UnitOfTime.HOURS,
-    ),
-    BWWPSensorDescription(
-        key="stop_min",
-        name="Stoppzeit min",
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-    ),
-    BWWPSensorDescription(key="betriebsart_raw", name="Betriebsart Roh"),
-    BWWPSensorDescription(key="legio_raw", name="Legionellen Roh"),
-    BWWPSensorDescription(key="ventilator_raw", name="Ventilator Roh"),
-    BWWPSensorDescription(key="pv_modus_raw", name="PV Modus Roh"),
     BWWPSensorDescription(
         key="t_pv_wp",
         name="Temperatur PV WP",
@@ -86,13 +54,6 @@ NUMERIC_SENSORS: tuple[BWWPSensorDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    BWWPSensorDescription(key="holiday_raw", name="Holiday Roh"),
-    BWWPSensorDescription(
-        key="abwesenheits_tage",
-        name="Abwesenheits Tage",
-        native_unit_of_measurement=UnitOfTime.DAYS,
-    ),
-    BWWPSensorDescription(key="boost_raw", name="Boost Roh"),
     BWWPSensorDescription(
         key="legionellen_tage",
         name="Legionellen Tage",
@@ -119,21 +80,9 @@ NUMERIC_SENSORS: tuple[BWWPSensorDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    BWWPSensorDescription(key="kompressor_raw", name="Kompressor Roh"),
-    BWWPSensorDescription(key="heizstab_raw", name="Heizstab Roh"),
-    BWWPSensorDescription(key="status_raw", name="Status Roh"),
-)
-
-ENUM_SENSORS: tuple[BWWPSensorDescription, ...] = (
-    BWWPSensorDescription(key="timer", name="Timer"),
-    BWWPSensorDescription(key="betriebsart", name="Betriebsart"),
-    BWWPSensorDescription(key="legionellen", name="Legionellen"),
-    BWWPSensorDescription(key="pv_modus", name="PV Modus"),
-    BWWPSensorDescription(key="ferien", name="Ferien"),
     BWWPSensorDescription(key="kompressor", name="Kompressor"),
     BWWPSensorDescription(key="heizstab", name="Heizstab"),
     BWWPSensorDescription(key="ventilator", name="Ventilator"),
-    BWWPSensorDescription(key="boost", name="Boost"),
 )
 
 
@@ -144,11 +93,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up BWWP sensors."""
     runtime: RuntimeData = hass.data[DOMAIN][entry.entry_id]
-    entities = [
-        BWWPSensor(runtime, entry, description)
-        for description in (*NUMERIC_SENSORS, *ENUM_SENSORS)
-    ]
-    async_add_entities(entities)
+    async_add_entities(BWWPSensor(runtime, entry, description) for description in SENSORS)
 
 
 class BWWPSensor(BWWPBaseEntity, SensorEntity):
@@ -169,5 +114,3 @@ class BWWPSensor(BWWPBaseEntity, SensorEntity):
     @property
     def native_value(self):
         return self.coordinator.data.get(self.entity_description.key)
-
-

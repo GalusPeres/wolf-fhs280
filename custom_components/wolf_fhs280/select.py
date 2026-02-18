@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
@@ -18,6 +19,8 @@ from .const import (
     PV_MODUS_OPTIONS,
 )
 from .entity import BWWPBaseEntity
+
+WRITE_SETTLE_SECONDS = 0.5
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -108,4 +111,5 @@ class BWWPSelect(BWWPBaseEntity, SelectEntity):
             address=self.entity_description.register,
             value=self.entity_description.options_map[option],
         )
+        await asyncio.sleep(WRITE_SETTLE_SECONDS)
         await self.coordinator.async_request_refresh()
