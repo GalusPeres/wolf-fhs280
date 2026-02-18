@@ -1,0 +1,47 @@
+﻿{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Wolf FHS280",
+        "description": "Configure the Modbus TCP connection for FHS280.",
+        "data": {
+          "name": "Device name",
+          "host": "Converter IP",
+          "port": "Port",
+          "slave_id": "Modbus ID",
+          "scan_interval": "Scan interval (seconds)",
+          "timeout": "Timeout (seconds)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to device",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Wolf FHS280 options",
+        "description": "Change Modbus connection parameters.",
+        "data": {
+          "name": "Device name",
+          "host": "Converter IP",
+          "port": "Port",
+          "slave_id": "Modbus ID",
+          "scan_interval": "Scan interval (seconds)",
+          "timeout": "Timeout (seconds)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to device",
+      "unknown": "Unexpected error"
+    }
+  }
+}
+
+
