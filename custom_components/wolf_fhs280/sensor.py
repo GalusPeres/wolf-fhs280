@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RuntimeData
@@ -85,6 +86,8 @@ SENSORS: tuple[BWWPSensorDescription, ...] = (
         key="device_time",
         name="Ger\u00e4teuhrzeit",
         icon="mdi:clock-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     BWWPSensorDescription(
         key="ventilator",
