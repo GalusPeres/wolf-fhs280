@@ -109,6 +109,8 @@ AN_AUS_OPTIONS: Final[dict[int, str]] = {
 VENTILATOR_OPTIONS: Final[dict[int, str]] = {
     0: "Niedrig",
     1: "Hoch",
+    2: "Stufe 2",
+    3: "Stufe 3",
 }
 
 ENUM_MAPPINGS: Final[dict[str, dict[int, str]]] = {

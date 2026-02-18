@@ -127,6 +127,8 @@
         "state": {
           "Niedrig": "Low",
           "Hoch": "High",
+          "Stufe 2": "Level 2",
+          "Stufe 3": "Level 3",
           "Unknown": "Unknown"
         }
       }

@@ -17,9 +17,9 @@ from .const import DOMAIN
 from .entity import BWWPBaseEntity
 
 WRITE_REFRESH_DELAY_SECONDS = 0.2
-FALLBACK_SETPOINT_MAX = 55
 SETPOINT_MIN_C = 5
 SETPOINT_MAX_C = 62
+FALLBACK_SETPOINT_MAX = SETPOINT_MAX_C
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -48,8 +48,8 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
         translation_key="t_min_control",
         icon="mdi:thermometer-low",
         entity_category=EntityCategory.CONFIG,
-        native_min_value=20,
-        native_max_value=80,
+        native_min_value=SETPOINT_MIN_C,
+        native_max_value=SETPOINT_MAX_C,
         native_step=1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         register=5,
@@ -60,8 +60,8 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
         translation_key="t2_min_control",
         icon="mdi:thermometer-low",
         entity_category=EntityCategory.CONFIG,
-        native_min_value=20,
-        native_max_value=80,
+        native_min_value=SETPOINT_MIN_C,
+        native_max_value=SETPOINT_MAX_C,
         native_step=1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         register=6,
@@ -72,8 +72,8 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
         translation_key="abwesenheitstage_control",
         icon="mdi:calendar-edit",
         entity_category=EntityCategory.CONFIG,
-        native_min_value=0,
-        native_max_value=30,
+        native_min_value=1,
+        native_max_value=99,
         native_step=1,
         native_unit_of_measurement=UnitOfTime.DAYS,
         register=21,
