@@ -44,8 +44,12 @@ class BWWPModbusHub:
         self._port = port
         self._slave_id = slave_id
         self._timeout = timeout
-        self._client = AsyncModbusTcpClient(host=host, port=port, timeout=timeout)
-        self._lock = asyncio.Lock()
+        # Use separate clients for read and write so controls are not blocked
+        # behind long polling reads.
+        self._read_client = AsyncModbusTcpClient(host=host, port=port, timeout=timeout)
+        self._write_client = AsyncModbusTcpClient(host=host, port=port, timeout=timeout)
+        self._read_lock = asyncio.Lock()
+        self._write_lock = asyncio.Lock()
 
     @property
     def host(self) -> str:
@@ -61,25 +65,27 @@ class BWWPModbusHub:
 
     async def async_close(self) -> None:
         """Close network connection."""
-        self._client.close()
+        self._read_client.close()
+        self._write_client.close()
 
-    def _is_connected(self) -> bool:
-        return bool(getattr(self._client, "connected", False))
+    @staticmethod
+    def _is_connected(client: AsyncModbusTcpClient) -> bool:
+        return bool(getattr(client, "connected", False))
 
-    async def _ensure_connection(self) -> None:
-        if self._is_connected():
+    async def _ensure_connection(self, client: AsyncModbusTcpClient) -> None:
+        if self._is_connected(client):
             return
         connected = await asyncio.wait_for(
-            self._client.connect(), timeout=self._request_timeout()
+            client.connect(), timeout=self._request_timeout()
         )
         if not connected:
             raise ModbusException(
                 f"Unable to connect to Modbus target {self._host}:{self._port}"
             )
 
-    async def _reset_connection(self) -> None:
+    async def _reset_connection(self, client: AsyncModbusTcpClient) -> None:
         """Close current connection so next call forces reconnect."""
-        self._client.close()
+        client.close()
 
     def _request_timeout(self) -> float:
         """Hard upper bound for one network call to avoid hanging tasks."""
@@ -92,15 +98,19 @@ class BWWPModbusHub:
         if count < 1:
             return []
 
-        async with self._lock:
+        async with self._read_lock:
             last_error: Exception | None = None
             for attempt in range(2):
                 try:
-                    await self._ensure_connection()
+                    await self._ensure_connection(self._read_client)
                     if register_type == "holding":
-                        result = await self._async_read_holding_registers(address, count)
+                        result = await self._async_read_holding_registers(
+                            self._read_client, address, count
+                        )
                     else:
-                        result = await self._async_read_input_registers(address, count)
+                        result = await self._async_read_input_registers(
+                            self._read_client, address, count
+                        )
 
                     if not result.isError():
                         registers = getattr(result, "registers", None) or []
@@ -123,7 +133,7 @@ class BWWPModbusHub:
                     last_error = err
 
                 if attempt == 0:
-                    await self._reset_connection()
+                    await self._reset_connection(self._read_client)
 
             raise last_error or ModbusException("Unknown Modbus read error")
 
@@ -135,12 +145,14 @@ class BWWPModbusHub:
     async def async_write_register(self, address: int, value: int) -> None:
         """Write one holding register."""
         write_value = value & 0xFFFF
-        async with self._lock:
+        async with self._write_lock:
             last_error: Exception | None = None
             for attempt in range(2):
                 try:
-                    await self._ensure_connection()
-                    result = await self._async_write_holding_register(address, write_value)
+                    await self._ensure_connection(self._write_client)
+                    result = await self._async_write_holding_register(
+                        self._write_client, address, write_value
+                    )
                     if not result.isError():
                         return
 
@@ -157,15 +169,17 @@ class BWWPModbusHub:
                     last_error = err
 
                 if attempt == 0:
-                    await self._reset_connection()
+                    await self._reset_connection(self._write_client)
 
             raise last_error or ModbusException("Unknown Modbus write error")
 
-    async def _async_read_holding_registers(self, address: int, count: int):
+    async def _async_read_holding_registers(
+        self, client: AsyncModbusTcpClient, address: int, count: int
+    ):
         """Read holding registers with pymodbus API compatibility."""
         try:
             return await asyncio.wait_for(
-                self._client.read_holding_registers(
+                client.read_holding_registers(
                     address=address,
                     count=count,
                     device_id=self._slave_id,
@@ -174,7 +188,7 @@ class BWWPModbusHub:
             )
         except TypeError:
             return await asyncio.wait_for(
-                self._client.read_holding_registers(
+                client.read_holding_registers(
                     address=address,
                     count=count,
                     slave=self._slave_id,
@@ -182,11 +196,13 @@ class BWWPModbusHub:
                 timeout=self._request_timeout(),
             )
 
-    async def _async_read_input_registers(self, address: int, count: int):
+    async def _async_read_input_registers(
+        self, client: AsyncModbusTcpClient, address: int, count: int
+    ):
         """Read input registers with pymodbus API compatibility."""
         try:
             return await asyncio.wait_for(
-                self._client.read_input_registers(
+                client.read_input_registers(
                     address=address,
                     count=count,
                     device_id=self._slave_id,
@@ -195,7 +211,7 @@ class BWWPModbusHub:
             )
         except TypeError:
             return await asyncio.wait_for(
-                self._client.read_input_registers(
+                client.read_input_registers(
                     address=address,
                     count=count,
                     slave=self._slave_id,
@@ -203,11 +219,13 @@ class BWWPModbusHub:
                 timeout=self._request_timeout(),
             )
 
-    async def _async_write_holding_register(self, address: int, value: int):
+    async def _async_write_holding_register(
+        self, client: AsyncModbusTcpClient, address: int, value: int
+    ):
         """Write one holding register with pymodbus API compatibility."""
         try:
             return await asyncio.wait_for(
-                self._client.write_register(
+                client.write_register(
                     address=address,
                     value=value,
                     device_id=self._slave_id,
@@ -216,7 +234,7 @@ class BWWPModbusHub:
             )
         except TypeError:
             return await asyncio.wait_for(
-                self._client.write_register(
+                client.write_register(
                     address=address,
                     value=value,
                     slave=self._slave_id,
