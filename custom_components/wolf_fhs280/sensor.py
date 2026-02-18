@@ -82,6 +82,7 @@ SENSORS: tuple[BWWPSensorDescription, ...] = (
     ),
     BWWPSensorDescription(key="kompressor", name="Kompressor"),
     BWWPSensorDescription(key="heizstab", name="Heizstab"),
+    BWWPSensorDescription(key="betriebsstatus", name="Betriebsstatus"),
     BWWPSensorDescription(key="ventilator", name="Ventilator"),
 )
 

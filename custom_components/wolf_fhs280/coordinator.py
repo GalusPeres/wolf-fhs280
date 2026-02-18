@@ -414,6 +414,22 @@ class BWWPDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             mapping = ENUM_MAPPINGS[enum_key]
             data[enum_key] = mapping.get(int(raw_value), "Unknown")
 
+        kompressor_raw = data.get("kompressor_raw")
+        heizstab_raw = data.get("heizstab_raw")
+        if kompressor_raw is None and heizstab_raw is None:
+            data["betriebsstatus"] = "Unknown"
+        else:
+            kompressor_on = kompressor_raw is not None and int(kompressor_raw) == 1
+            heizstab_on = heizstab_raw is not None and int(heizstab_raw) == 1
+            if kompressor_on and heizstab_on:
+                data["betriebsstatus"] = "Wärmepumpe + Heizstab"
+            elif heizstab_on:
+                data["betriebsstatus"] = "Nur Heizstab"
+            elif kompressor_on:
+                data["betriebsstatus"] = "Nur Wärmepumpe"
+            else:
+                data["betriebsstatus"] = "Aus"
+
         return data
 
 
