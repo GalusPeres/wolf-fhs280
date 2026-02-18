@@ -7,7 +7,6 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from homeassistant.components.modbus.modbus import DATA_MODBUS_HUBS
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
@@ -27,7 +26,7 @@ from .const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
-from .coordinator import BWWPModbusHub, BWWPSharedModbusHub
+from .coordinator import BWWPModbusHub
 
 LOGGER = logging.getLogger(__name__)
 
@@ -121,24 +120,12 @@ async def _async_validate_input(hass, user_input: dict[str, Any]) -> dict[str, A
     if not cleaned[CONF_HOST]:
         raise CannotConnect
 
-    shared_hub_name, shared_hub = _find_matching_shared_hub(
-        hass=hass,
+    hub = BWWPModbusHub(
         host=cleaned[CONF_HOST],
         port=cleaned[CONF_PORT],
+        slave_id=cleaned[CONF_SLAVE_ID],
+        timeout=cleaned[CONF_TIMEOUT],
     )
-    if shared_hub is not None:
-        hub = BWWPSharedModbusHub(
-            hub=shared_hub,
-            hub_name=shared_hub_name or "unknown",
-            slave_id=cleaned[CONF_SLAVE_ID],
-        )
-    else:
-        hub = BWWPModbusHub(
-            host=cleaned[CONF_HOST],
-            port=cleaned[CONF_PORT],
-            slave_id=cleaned[CONF_SLAVE_ID],
-            timeout=cleaned[CONF_TIMEOUT],
-        )
 
     try:
         await _async_read_probe_registers(hub)
@@ -236,25 +223,3 @@ async def _async_read_probe_registers(hub: Any) -> None:
     if last_error is not None:
         raise last_error
     raise ModbusException("Probe read failed")
-
-
-def _find_matching_shared_hub(
-    hass, host: str, port: int
-) -> tuple[str | None, object | None]:
-    """Find existing HA modbus hub for the same endpoint."""
-    hubs = hass.data.get(DATA_MODBUS_HUBS, {})
-    host_str = str(host).strip()
-
-    for hub_name, hub in hubs.items():
-        params = getattr(hub, "_pb_params", {})
-        hub_host = str(params.get("host", "")).strip()
-        hub_port = params.get("port")
-        try:
-            hub_port_int = int(hub_port)
-        except (TypeError, ValueError):
-            hub_port_int = None
-
-        if hub_host == host_str and hub_port_int == int(port):
-            return str(hub_name), hub
-
-    return None, None

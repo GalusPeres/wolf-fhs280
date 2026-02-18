@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.modbus.modbus import DATA_MODBUS_HUBS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -22,7 +21,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
 )
-from .coordinator import BWWPDataUpdateCoordinator, BWWPModbusHub, BWWPSharedModbusHub
+from .coordinator import BWWPDataUpdateCoordinator, BWWPModbusHub
 
 LEGACY_CONF_HUB = "hub"
 
@@ -57,21 +56,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     scan_interval = int(
         _entry_value(entry, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     )
-
-    shared_hub_name, shared_hub = _find_matching_shared_hub(hass, str(host), port)
-    if shared_hub is not None:
-        hub = BWWPSharedModbusHub(
-            hub=shared_hub,
-            hub_name=shared_hub_name or "unknown",
-            slave_id=slave_id,
-        )
-    else:
-        hub = BWWPModbusHub(
-            host=str(host),
-            port=port,
-            slave_id=slave_id,
-            timeout=timeout,
-        )
+    hub = BWWPModbusHub(
+        host=str(host),
+        port=port,
+        slave_id=slave_id,
+        timeout=timeout,
+    )
 
     coordinator = BWWPDataUpdateCoordinator(
         hass=hass,
@@ -141,27 +131,3 @@ def _resolve_legacy_connection(
     if host is None:
         return None, parsed_port
     return str(host), parsed_port
-
-
-def _find_matching_shared_hub(
-    hass: HomeAssistant, host: str, port: int
-) -> tuple[str | None, object | None]:
-    """Find an existing HA modbus hub with the same host/port."""
-    hubs = hass.data.get(DATA_MODBUS_HUBS, {})
-    if not hubs:
-        return None, None
-
-    host_str = str(host).strip()
-    for hub_name, hub in hubs.items():
-        params = getattr(hub, "_pb_params", {})
-        hub_host = str(params.get("host", "")).strip()
-        hub_port = params.get("port")
-        try:
-            hub_port_int = int(hub_port)
-        except (TypeError, ValueError):
-            hub_port_int = None
-
-        if hub_host == host_str and hub_port_int == int(port):
-            return str(hub_name), hub
-
-    return None, None
