@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RuntimeData
@@ -29,14 +28,14 @@ class BWWPSensorDescription(SensorEntityDescription):
 SENSORS: tuple[BWWPSensorDescription, ...] = (
     BWWPSensorDescription(
         key="t_pv_wp",
-        name="Temperatur - PV WP",
+        name="Temperatur PV WP",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BWWPSensorDescription(
         key="t_pv_el",
-        name="Temperatur - PV Heizstab",
+        name="Temperatur PV Heizstab",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -48,49 +47,48 @@ SENSORS: tuple[BWWPSensorDescription, ...] = (
     ),
     BWWPSensorDescription(
         key="t_max",
-        name="Temperatur - Maximalwert",
+        name="Temperatur max",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BWWPSensorDescription(
         key="t1",
-        name="Temperatur - Verdampfer",
+        name="Verdampfertemperatur",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BWWPSensorDescription(
         key="t2",
-        name="Temperatur - Speicher",
+        name="Speichertemperatur",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BWWPSensorDescription(
         key="kompressor",
-        name="Status - Kompressor",
+        name="Kompressor",
         icon="mdi:engine-outline",
     ),
     BWWPSensorDescription(
         key="heizstab",
-        name="Status - Heizstab",
+        name="Heizstab",
         icon="mdi:radiator",
     ),
     BWWPSensorDescription(
         key="betriebsstatus",
-        name="Status - Betriebsart aktiv",
+        name="Betriebsstatus",
         icon="mdi:heat-pump-outline",
     ),
     BWWPSensorDescription(
         key="device_time",
-        name="Zeit - Ger\u00e4teuhr",
+        name="Ger\u00e4teuhrzeit",
         icon="mdi:clock-outline",
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BWWPSensorDescription(
         key="ventilator",
-        name="Status - Ventilator",
+        name="Ventilator",
         icon="mdi:fan",
     ),
 )

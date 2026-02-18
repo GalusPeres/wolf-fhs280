@@ -28,7 +28,7 @@ class BWWPSwitchDescription(SwitchEntityDescription):
 SWITCH_DESCRIPTIONS: tuple[BWWPSwitchDescription, ...] = (
     BWWPSwitchDescription(
         key="timer_control",
-        name="Zeit - Timer",
+        name="Timer",
         icon="mdi:timer-outline",
         entity_category=EntityCategory.CONFIG,
         register=7,
@@ -36,7 +36,7 @@ SWITCH_DESCRIPTIONS: tuple[BWWPSwitchDescription, ...] = (
     ),
     BWWPSwitchDescription(
         key="boost_control",
-        name="Betrieb - Boost",
+        name="Boost",
         icon="mdi:rocket-launch-outline",
         entity_category=EntityCategory.CONFIG,
         register=22,

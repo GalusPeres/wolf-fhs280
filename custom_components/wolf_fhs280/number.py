@@ -31,7 +31,7 @@ class BWWPNumberDescription(NumberEntityDescription):
 NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     BWWPNumberDescription(
         key="setpoint_control",
-        name="Temperatur - Sollwert",
+        name="Soll Temperatur",
         icon="mdi:thermometer-chevron-up",
         entity_category=EntityCategory.CONFIG,
         native_min_value=20,
@@ -43,7 +43,7 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     ),
     BWWPNumberDescription(
         key="t_min_control",
-        name="Temperatur - T min",
+        name="T min",
         icon="mdi:thermometer-low",
         entity_category=EntityCategory.CONFIG,
         native_min_value=20,
@@ -55,7 +55,7 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     ),
     BWWPNumberDescription(
         key="t2_min_control",
-        name="Temperatur - T2 min",
+        name="T2 min",
         icon="mdi:thermometer-low",
         entity_category=EntityCategory.CONFIG,
         native_min_value=20,
@@ -67,7 +67,7 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     ),
     BWWPNumberDescription(
         key="abwesenheitstage_control",
-        name="Betrieb - Abwesenheitstage",
+        name="Abwesenheitstage",
         icon="mdi:calendar-edit",
         entity_category=EntityCategory.CONFIG,
         native_min_value=0,

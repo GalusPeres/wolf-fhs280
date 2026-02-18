@@ -31,7 +31,7 @@ class BWWPTimeDescription(TimeEntityDescription):
 TIME_DESCRIPTIONS: tuple[BWWPTimeDescription, ...] = (
     BWWPTimeDescription(
         key="start_time_control",
-        name="Zeit - Start",
+        name="Startzeit",
         icon="mdi:clock-start",
         entity_category=EntityCategory.CONFIG,
         hour_register=8,
@@ -41,7 +41,7 @@ TIME_DESCRIPTIONS: tuple[BWWPTimeDescription, ...] = (
     ),
     BWWPTimeDescription(
         key="stop_time_control",
-        name="Zeit - Stopp",
+        name="Endzeit",
         icon="mdi:clock-end",
         entity_category=EntityCategory.CONFIG,
         hour_register=10,
