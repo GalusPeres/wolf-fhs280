@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -71,26 +70,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hub=hub,
         scan_interval_seconds=scan_interval,
     )
-    initial_refresh_timeout = max(8.0, timeout * 2 + 2.0)
-    try:
-        await asyncio.wait_for(
-            coordinator.async_refresh(),
-            timeout=initial_refresh_timeout,
-        )
-    except asyncio.TimeoutError:
-        LOGGER.warning(
-            "Initial refresh timed out after %.1fs for %s:%s (slave %s). "
-            "Continuing setup; entities will retry.",
-            initial_refresh_timeout,
-            host,
-            port,
-            slave_id,
-        )
-
     hass.data[DOMAIN][entry.entry_id] = RuntimeData(hub=hub, coordinator=coordinator)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    # Do not block Home Assistant startup on first Modbus poll.
+    hass.async_create_task(coordinator.async_refresh())
     return True
 
 

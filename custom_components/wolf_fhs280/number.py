@@ -30,7 +30,7 @@ class BWWPNumberDescription(NumberEntityDescription):
 NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     BWWPNumberDescription(
         key="setpoint_control",
-        name="Sollwert",
+        name="Solltemperatur",
         icon="mdi:thermometer-chevron-up",
         entity_category=EntityCategory.CONFIG,
         native_min_value=20,
