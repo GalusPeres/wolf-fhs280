@@ -28,7 +28,7 @@ class BWWPSwitchDescription(SwitchEntityDescription):
 SWITCH_DESCRIPTIONS: tuple[BWWPSwitchDescription, ...] = (
     BWWPSwitchDescription(
         key="timer_control",
-        name="Timer schalten",
+        name="Timer",
         icon="mdi:timer-outline",
         entity_category=EntityCategory.CONFIG,
         register=7,
@@ -36,7 +36,7 @@ SWITCH_DESCRIPTIONS: tuple[BWWPSwitchDescription, ...] = (
     ),
     BWWPSwitchDescription(
         key="boost_control",
-        name="Boost schalten",
+        name="Boost",
         icon="mdi:rocket-launch-outline",
         entity_category=EntityCategory.CONFIG,
         register=22,
@@ -86,7 +86,6 @@ class BWWPSwitch(BWWPBaseEntity, SwitchEntity):
             address=self.entity_description.register,
             value=1,
         )
-        self._apply_local_update({self.entity_description.state_key: 1})
         self._schedule_background_refresh(WRITE_REFRESH_DELAY_SECONDS)
 
     async def async_turn_off(self, **kwargs) -> None:
@@ -94,5 +93,4 @@ class BWWPSwitch(BWWPBaseEntity, SwitchEntity):
             address=self.entity_description.register,
             value=0,
         )
-        self._apply_local_update({self.entity_description.state_key: 0})
         self._schedule_background_refresh(WRITE_REFRESH_DELAY_SECONDS)

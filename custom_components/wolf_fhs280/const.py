@@ -44,8 +44,6 @@ class RegisterDefinition:
 
 
 READ_REGISTERS: Final[tuple[RegisterDefinition, ...]] = (
-    RegisterDefinition("current_h", 0, "holding"),
-    RegisterDefinition("current_min", 1, "holding"),
     RegisterDefinition("t_setpoint", 4, "holding"),
     RegisterDefinition("t_min", 5, "holding"),
     RegisterDefinition("t2_min", 6, "holding"),
@@ -65,6 +63,8 @@ READ_REGISTERS: Final[tuple[RegisterDefinition, ...]] = (
     RegisterDefinition("boost_raw", 22, "holding"),
     RegisterDefinition("t_max", 28, "holding"),
     RegisterDefinition("legionellen_tage", 33, "holding"),
+    RegisterDefinition("current_min", 104, "holding"),
+    RegisterDefinition("current_h", 105, "holding"),
     RegisterDefinition("t1", 7, "input", scale=0.1, precision=1),
     RegisterDefinition("t2", 8, "input", scale=0.1, precision=1),
     RegisterDefinition("kompressor_raw", 9, "input"),
@@ -78,11 +78,11 @@ TIMER_OPTIONS: Final[dict[int, str]] = {
 }
 BETRIEBSART_OPTIONS: Final[dict[int, str]] = {
     0: "Aus",
-    1: "Nur Wärmepumpe",
-    2: "Nur Heizstab",
-    3: "Wärmepumpe + Heizstab",
+    1: "Waermepumpe",
+    2: "Heizstab",
+    3: "Waermepumpe + Heizstab",
     4: "Boiler",
-    5: "Wärmepumpe + Boiler",
+    5: "Waermepumpe + Boiler",
 }
 LEGIONELLEN_OPTIONS: Final[dict[int, str]] = {
     0: "Aus",
@@ -91,9 +91,9 @@ LEGIONELLEN_OPTIONS: Final[dict[int, str]] = {
 }
 PV_MODUS_OPTIONS: Final[dict[int, str]] = {
     0: "Aus",
-    1: "Nur Wärmepumpe",
-    2: "Nur Heizstab",
-    3: "Heizstab + Wärmepumpe",
+    1: "Waermepumpe",
+    2: "Heizstab",
+    3: "Heizstab + Waermepumpe",
 }
 FERIEN_OPTIONS: Final[dict[int, str]] = {
     0: "Aus",

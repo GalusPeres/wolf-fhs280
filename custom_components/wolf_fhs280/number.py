@@ -30,7 +30,7 @@ class BWWPNumberDescription(NumberEntityDescription):
 NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     BWWPNumberDescription(
         key="setpoint_control",
-        name="Solltemperatur einstellen",
+        name="Sollwert",
         icon="mdi:thermometer-chevron-up",
         entity_category=EntityCategory.CONFIG,
         native_min_value=20,
@@ -42,7 +42,7 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     ),
     BWWPNumberDescription(
         key="t_min_control",
-        name="T min einstellen",
+        name="T min",
         icon="mdi:thermometer-low",
         entity_category=EntityCategory.CONFIG,
         native_min_value=20,
@@ -54,7 +54,7 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     ),
     BWWPNumberDescription(
         key="t2_min_control",
-        name="T2 min einstellen",
+        name="T2 min",
         icon="mdi:thermometer-low",
         entity_category=EntityCategory.CONFIG,
         native_min_value=20,
@@ -66,7 +66,7 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
     ),
     BWWPNumberDescription(
         key="abwesenheitstage_control",
-        name="Abwesenheitstage einstellen",
+        name="Abwesenheitstage",
         icon="mdi:calendar-edit",
         entity_category=EntityCategory.CONFIG,
         native_min_value=0,
@@ -75,54 +75,6 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.DAYS,
         register=21,
         state_key="abwesenheits_tage",
-    ),
-    BWWPNumberDescription(
-        key="start_hour_control",
-        name="Startzeit Stunde",
-        icon="mdi:clock-start",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        native_min_value=0,
-        native_max_value=23,
-        native_step=1,
-        register=8,
-        state_key="start_h",
-    ),
-    BWWPNumberDescription(
-        key="start_minute_control",
-        name="Startzeit Minute",
-        icon="mdi:clock-start",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        native_min_value=0,
-        native_max_value=59,
-        native_step=1,
-        register=9,
-        state_key="start_min",
-    ),
-    BWWPNumberDescription(
-        key="stop_hour_control",
-        name="Stoppzeit Stunde",
-        icon="mdi:clock-end",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        native_min_value=0,
-        native_max_value=23,
-        native_step=1,
-        register=10,
-        state_key="stop_h",
-    ),
-    BWWPNumberDescription(
-        key="stop_minute_control",
-        name="Stoppzeit Minute",
-        icon="mdi:clock-end",
-        entity_category=EntityCategory.CONFIG,
-        entity_registry_enabled_default=False,
-        native_min_value=0,
-        native_max_value=59,
-        native_step=1,
-        register=11,
-        state_key="stop_min",
     ),
 )
 
@@ -155,6 +107,7 @@ class BWWPNumber(BWWPBaseEntity, NumberEntity):
         self.entity_description = description
         self._attr_name = description.name
         self._attr_mode = NumberMode.BOX
+        self._attr_suggested_display_precision = 0
         self._hub = runtime.hub
         if description.key == "setpoint_control":
             configured_max = int(
@@ -171,7 +124,7 @@ class BWWPNumber(BWWPBaseEntity, NumberEntity):
         value = self.coordinator.data.get(self.entity_description.state_key)
         if value is None:
             return None
-        return float(value)
+        return int(value)
 
     async def async_set_native_value(self, value: float) -> None:
         rounded_value = int(round(value))
@@ -189,5 +142,4 @@ class BWWPNumber(BWWPBaseEntity, NumberEntity):
             address=self.entity_description.register,
             value=rounded_value,
         )
-        self._apply_local_update({self.entity_description.state_key: rounded_value})
         self._schedule_background_refresh(WRITE_REFRESH_DELAY_SECONDS)

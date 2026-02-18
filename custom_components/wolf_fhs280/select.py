@@ -35,7 +35,7 @@ class BWWPSelectDescription(SelectEntityDescription):
 SELECT_DESCRIPTIONS: tuple[BWWPSelectDescription, ...] = (
     BWWPSelectDescription(
         key="betriebsart_control",
-        name="Betriebsart einstellen",
+        name="Betriebsart",
         icon="mdi:cog-transfer",
         entity_category=EntityCategory.CONFIG,
         options=tuple(BETRIEBSART_OPTIONS.values()),
@@ -45,7 +45,7 @@ SELECT_DESCRIPTIONS: tuple[BWWPSelectDescription, ...] = (
     ),
     BWWPSelectDescription(
         key="legionellen_control",
-        name="Legionellen einstellen",
+        name="Legionellen",
         icon="mdi:bacteria-outline",
         entity_category=EntityCategory.CONFIG,
         options=tuple(LEGIONELLEN_OPTIONS.values()),
@@ -55,7 +55,7 @@ SELECT_DESCRIPTIONS: tuple[BWWPSelectDescription, ...] = (
     ),
     BWWPSelectDescription(
         key="pv_modus_control",
-        name="PV Modus einstellen",
+        name="PV Modus",
         icon="mdi:solar-power-variant-outline",
         entity_category=EntityCategory.CONFIG,
         options=tuple(PV_MODUS_OPTIONS.values()),
@@ -65,7 +65,7 @@ SELECT_DESCRIPTIONS: tuple[BWWPSelectDescription, ...] = (
     ),
     BWWPSelectDescription(
         key="ferien_control",
-        name="Ferienmodus einstellen",
+        name="Ferienmodus",
         icon="mdi:beach",
         entity_category=EntityCategory.CONFIG,
         options=tuple(FERIEN_OPTIONS.values()),
@@ -119,5 +119,4 @@ class BWWPSelect(BWWPBaseEntity, SelectEntity):
             address=self.entity_description.register,
             value=self.entity_description.options_map[option],
         )
-        self._apply_local_update({self.entity_description.state_key: option})
         self._schedule_background_refresh(WRITE_REFRESH_DELAY_SECONDS)

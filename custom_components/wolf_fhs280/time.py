@@ -31,7 +31,7 @@ class BWWPTimeDescription(TimeEntityDescription):
 TIME_DESCRIPTIONS: tuple[BWWPTimeDescription, ...] = (
     BWWPTimeDescription(
         key="start_time_control",
-        name="Startzeit einstellen",
+        name="Startzeit",
         icon="mdi:clock-start",
         entity_category=EntityCategory.CONFIG,
         hour_register=8,
@@ -41,7 +41,7 @@ TIME_DESCRIPTIONS: tuple[BWWPTimeDescription, ...] = (
     ),
     BWWPTimeDescription(
         key="stop_time_control",
-        name="Stoppzeit einstellen",
+        name="Stoppzeit",
         icon="mdi:clock-end",
         entity_category=EntityCategory.CONFIG,
         hour_register=10,
@@ -51,11 +51,11 @@ TIME_DESCRIPTIONS: tuple[BWWPTimeDescription, ...] = (
     ),
     BWWPTimeDescription(
         key="current_time_control",
-        name="Aktuelle Uhrzeit einstellen",
+        name="Aktuelle Uhrzeit",
         icon="mdi:clock-outline",
         entity_category=EntityCategory.CONFIG,
-        hour_register=0,
-        minute_register=1,
+        hour_register=105,
+        minute_register=104,
         hour_state_key="current_h",
         minute_state_key="current_min",
     ),
@@ -117,11 +117,5 @@ class BWWPTime(BWWPBaseEntity, TimeEntity):
         await self._hub.async_write_register(
             address=self.entity_description.minute_register,
             value=minute,
-        )
-        self._apply_local_update(
-            {
-                self.entity_description.hour_state_key: hour,
-                self.entity_description.minute_state_key: minute,
-            }
         )
         self._schedule_background_refresh(WRITE_REFRESH_DELAY_SECONDS)

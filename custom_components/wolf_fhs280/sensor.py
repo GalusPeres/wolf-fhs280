@@ -27,20 +27,6 @@ class BWWPSensorDescription(SensorEntityDescription):
 
 SENSORS: tuple[BWWPSensorDescription, ...] = (
     BWWPSensorDescription(
-        key="t_min",
-        name="T min",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    BWWPSensorDescription(
-        key="t2_min",
-        name="T2 min",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    BWWPSensorDescription(
         key="t_pv_wp",
         name="Temperatur PV WP",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
