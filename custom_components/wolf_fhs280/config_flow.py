@@ -1,7 +1,9 @@
-﻿"""Config flow for Wolf FHS280."""
+"""Config flow for Wolf FHS280."""
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -9,7 +11,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from pymodbus.exceptions import ModbusException
+from homeassistant.helpers import selector
 
 from .const import (
     CONF_NAME,
@@ -25,6 +27,22 @@ from .const import (
 )
 from .coordinator import BWWPModbusHub
 
+LOGGER = logging.getLogger(__name__)
+
+
+def _number_box(
+    *, min_value: float, max_value: float, step: float
+) -> selector.NumberSelector:
+    """Build a numeric textbox selector (no slider)."""
+    return selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            min=min_value,
+            max=max_value,
+            step=step,
+            mode=selector.NumberSelectorMode.BOX,
+        )
+    )
+
 
 def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
     return vol.Schema(
@@ -33,35 +51,54 @@ def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
             vol.Required(CONF_HOST, default=defaults.get(CONF_HOST, "")): str,
             vol.Required(
                 CONF_PORT, default=defaults.get(CONF_PORT, DEFAULT_PORT)
-            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+            ): _number_box(min_value=1, max_value=65535, step=1),
             vol.Required(
                 CONF_SLAVE_ID, default=defaults.get(CONF_SLAVE_ID, DEFAULT_SLAVE_ID)
-            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=247)),
+            ): _number_box(min_value=1, max_value=247, step=1),
             vol.Required(
                 CONF_SCAN_INTERVAL,
                 default=defaults.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
-            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=3600)),
+            ): _number_box(min_value=1, max_value=3600, step=1),
             vol.Required(
                 CONF_TIMEOUT, default=defaults.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
-            ): vol.All(vol.Coerce(float), vol.Range(min=0.5, max=60)),
+            ): _number_box(min_value=0.5, max_value=60, step=0.5),
         }
     )
 
 
-async def _async_validate_input(user_input: dict[str, Any]) -> None:
-    """Validate connection and register read."""
+def _normalize_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Cast selector values into the expected runtime types."""
+    return {
+        **user_input,
+        CONF_NAME: str(user_input[CONF_NAME]).strip(),
+        CONF_HOST: str(user_input[CONF_HOST]).strip(),
+        CONF_PORT: int(user_input[CONF_PORT]),
+        CONF_SLAVE_ID: int(user_input[CONF_SLAVE_ID]),
+        CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
+        CONF_TIMEOUT: float(user_input[CONF_TIMEOUT]),
+    }
+
+
+async def _async_validate_input(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Validate connection and one known register read."""
+    cleaned = _normalize_user_input(user_input)
+    if not cleaned[CONF_HOST]:
+        raise CannotConnect
+
     hub = BWWPModbusHub(
-        host=user_input[CONF_HOST],
-        port=user_input[CONF_PORT],
-        slave_id=user_input[CONF_SLAVE_ID],
-        timeout=user_input[CONF_TIMEOUT],
+        host=cleaned[CONF_HOST],
+        port=cleaned[CONF_PORT],
+        slave_id=cleaned[CONF_SLAVE_ID],
+        timeout=cleaned[CONF_TIMEOUT],
     )
     try:
         await hub.async_read_register("holding", 4)
-    except ModbusException as err:
+    except (OSError, asyncio.TimeoutError, Exception) as err:
         raise CannotConnect from err
     finally:
         await hub.async_close()
+
+    return cleaned
 
 
 class BWWPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -74,10 +111,11 @@ class BWWPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await _async_validate_input(user_input)
+                user_input = await _async_validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
+                LOGGER.exception("Unexpected error while validating config flow input")
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(
@@ -111,10 +149,11 @@ class BWWPOptionsFlow(config_entries.OptionsFlow):
 
         if user_input is not None:
             try:
-                await _async_validate_input(user_input)
+                user_input = await _async_validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
+                LOGGER.exception("Unexpected error while validating options flow input")
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(title="", data=user_input)
@@ -129,5 +168,3 @@ class BWWPOptionsFlow(config_entries.OptionsFlow):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
