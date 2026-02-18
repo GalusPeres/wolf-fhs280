@@ -17,11 +17,13 @@ from homeassistant.helpers import selector
 from .const import (
     CONF_NAME,
     CONF_SCAN_INTERVAL,
+    CONF_SETPOINT_MAX,
     CONF_SLAVE_ID,
     CONF_TIMEOUT,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SETPOINT_MAX,
     DEFAULT_SLAVE_ID,
     DEFAULT_TIMEOUT,
     DOMAIN,
@@ -96,6 +98,10 @@ def _build_schema(defaults: dict[str, Any]) -> vol.Schema:
             vol.Required(
                 CONF_TIMEOUT, default=defaults.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
             ): _number_box(min_value=0.5, max_value=60, step=0.5),
+            vol.Required(
+                CONF_SETPOINT_MAX,
+                default=defaults.get(CONF_SETPOINT_MAX, DEFAULT_SETPOINT_MAX),
+            ): _number_box(min_value=20, max_value=80, step=1),
         }
     )
 
@@ -110,6 +116,7 @@ def _normalize_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
         CONF_SLAVE_ID: int(user_input[CONF_SLAVE_ID]),
         CONF_SCAN_INTERVAL: int(user_input[CONF_SCAN_INTERVAL]),
         CONF_TIMEOUT: float(user_input[CONF_TIMEOUT]),
+        CONF_SETPOINT_MAX: int(user_input[CONF_SETPOINT_MAX]),
     }
 
 

@@ -10,7 +10,8 @@
           "port": "Port",
           "slave_id": "Modbus-ID",
           "scan_interval": "Abfrageintervall (Sekunden)",
-          "timeout": "Timeout (Sekunden)"
+          "timeout": "Timeout (Sekunden)",
+          "setpoint_max": "Max. Solltemperatur (°C)"
         }
       }
     },
@@ -33,7 +34,8 @@
           "port": "Port",
           "slave_id": "Modbus-ID",
           "scan_interval": "Abfrageintervall (Sekunden)",
-          "timeout": "Timeout (Sekunden)"
+          "timeout": "Timeout (Sekunden)",
+          "setpoint_max": "Max. Solltemperatur (°C)"
         }
       }
     },

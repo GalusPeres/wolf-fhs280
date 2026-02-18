@@ -12,7 +12,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RuntimeData
-from .const import DOMAIN
+from .const import CONF_SETPOINT_MAX, DEFAULT_SETPOINT_MAX, DOMAIN
 from .entity import BWWPBaseEntity
 
 WRITE_REFRESH_DELAY_SECONDS = 0.2
@@ -31,7 +31,7 @@ NUMBER_DESCRIPTIONS: tuple[BWWPNumberDescription, ...] = (
         key="setpoint_control",
         name="Solltemperatur einstellen",
         native_min_value=20,
-        native_max_value=55,
+        native_max_value=DEFAULT_SETPOINT_MAX,
         native_step=1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         register=4,
@@ -115,6 +115,15 @@ class BWWPNumber(BWWPBaseEntity, NumberEntity):
         self._attr_name = description.name
         self._attr_mode = NumberMode.BOX
         self._hub = runtime.hub
+        if description.key == "setpoint_control":
+            configured_max = int(
+                entry.options.get(
+                    CONF_SETPOINT_MAX,
+                    entry.data.get(CONF_SETPOINT_MAX, DEFAULT_SETPOINT_MAX),
+                )
+            )
+            configured_max = max(20, min(configured_max, 80))
+            self._attr_native_max_value = float(configured_max)
 
     @property
     def native_value(self) -> float | None:
@@ -125,15 +134,15 @@ class BWWPNumber(BWWPBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         rounded_value = int(round(value))
-        min_value = self.entity_description.native_min_value
-        max_value = self.entity_description.native_max_value
-        if min_value is not None and rounded_value < int(min_value):
+        min_value = self.native_min_value
+        max_value = self.native_max_value
+        if min_value is not None and rounded_value < int(float(min_value)):
             raise HomeAssistantError(
-                f"Value {rounded_value} is below minimum {int(min_value)}"
+                f"Value {rounded_value} is below minimum {int(float(min_value))}"
             )
-        if max_value is not None and rounded_value > int(max_value):
+        if max_value is not None and rounded_value > int(float(max_value)):
             raise HomeAssistantError(
-                f"Value {rounded_value} is above maximum {int(max_value)}"
+                f"Value {rounded_value} is above maximum {int(float(max_value))}"
             )
         await self._hub.async_write_register(
             address=self.entity_description.register,

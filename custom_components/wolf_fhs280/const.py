@@ -12,12 +12,14 @@ DOMAIN: Final = "wolf_fhs280"
 CONF_NAME: Final = "name"
 CONF_SCAN_INTERVAL: Final = "scan_interval"
 CONF_SLAVE_ID: Final = "slave_id"
+CONF_SETPOINT_MAX: Final = "setpoint_max"
 
 DEFAULT_NAME: Final = "Wolf FHS280"
 DEFAULT_PORT: Final = 502
 DEFAULT_SCAN_INTERVAL: Final = 30
 DEFAULT_SLAVE_ID: Final = 3
 DEFAULT_TIMEOUT: Final = 5.0
+DEFAULT_SETPOINT_MAX: Final = 55
 
 PLATFORMS: Final = [
     Platform.SENSOR,
