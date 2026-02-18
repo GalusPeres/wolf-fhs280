@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 import logging
 from typing import Any
 
@@ -12,7 +13,6 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
-from pymodbus.exceptions import ModbusException
 
 from .const import (
     CONF_NAME,
@@ -26,7 +26,6 @@ from .const import (
     DEFAULT_TIMEOUT,
     DOMAIN,
 )
-from .coordinator import BWWPModbusHub
 
 LOGGER = logging.getLogger(__name__)
 
@@ -114,26 +113,17 @@ def _normalize_user_input(user_input: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-async def _async_validate_input(hass, user_input: dict[str, Any]) -> dict[str, Any]:
-    """Validate connection and one known register read."""
+async def _async_validate_input(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Validate connection quickly to avoid long config-flow waits."""
     cleaned = _normalize_user_input(user_input)
     if not cleaned[CONF_HOST]:
         raise CannotConnect
 
-    hub = BWWPModbusHub(
+    await _async_probe_tcp(
         host=cleaned[CONF_HOST],
         port=cleaned[CONF_PORT],
-        slave_id=cleaned[CONF_SLAVE_ID],
         timeout=cleaned[CONF_TIMEOUT],
     )
-
-    try:
-        await _async_read_probe_registers(hub)
-    except (OSError, asyncio.TimeoutError, ModbusException) as err:
-        LOGGER.debug("Config flow connection test failed: %s", err)
-        raise CannotConnect from err
-    finally:
-        await hub.async_close()
 
     return cleaned
 
@@ -148,7 +138,7 @@ class BWWPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                user_input = await _async_validate_input(self.hass, user_input)
+                user_input = await _async_validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -187,7 +177,7 @@ class BWWPOptionsFlow(config_entries.OptionsFlow):
 
         if user_input is not None:
             try:
-                user_input = await _async_validate_input(self.hass, user_input)
+                user_input = await _async_validate_input(user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:
@@ -209,17 +199,20 @@ class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-async def _async_read_probe_registers(hub: Any) -> None:
-    """Probe both register spaces with retries to tolerate bus contention."""
-    last_error: Exception | None = None
-    for _ in range(5):
-        try:
-            await hub.async_read_register("holding", 4)
-            await hub.async_read_register("input", 7)
-            return
-        except (OSError, asyncio.TimeoutError, ModbusException) as err:
-            last_error = err
-            await asyncio.sleep(0.2)
-    if last_error is not None:
-        raise last_error
-    raise ModbusException("Probe read failed")
+async def _async_probe_tcp(host: str, port: int, timeout: float) -> None:
+    """Do a short raw TCP connect test."""
+    validation_timeout = max(0.5, min(timeout, 2.0))
+    writer = None
+    try:
+        _, writer = await asyncio.wait_for(
+            asyncio.open_connection(host=host, port=port),
+            timeout=validation_timeout,
+        )
+    except (OSError, asyncio.TimeoutError) as err:
+        LOGGER.debug("Config flow TCP probe failed: %s", err)
+        raise CannotConnect from err
+    finally:
+        if writer is not None:
+            writer.close()
+            with suppress(Exception):
+                await asyncio.wait_for(writer.wait_closed(), timeout=0.5)
