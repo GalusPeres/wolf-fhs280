@@ -15,6 +15,7 @@ from homeassistant.components.modbus.const import (
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from pymodbus.client import AsyncModbusTcpClient
 from pymodbus.exceptions import ModbusException
+from pymodbus.pdu import ExceptionResponse
 
 from .const import ENUM_MAPPINGS, ENUM_SOURCE_KEYS, READ_REGISTERS
 
@@ -22,6 +23,17 @@ if TYPE_CHECKING:
     from homeassistant.components.modbus.modbus import ModbusHub as HAModbusHub
 
 LOGGER = logging.getLogger(__name__)
+
+MODBUS_EXCEPTION_LABELS: dict[int, str] = {
+    1: "illegal function",
+    2: "illegal data address",
+    3: "illegal data value",
+    4: "server device failure",
+}
+
+
+class NonRetryableModbusException(ModbusException):
+    """A device-side protocol error where retrying the same request is pointless."""
 
 
 class BWWPModbusHub:
@@ -98,7 +110,15 @@ class BWWPModbusHub:
                             )
                         return [int(value) for value in registers[:count]]
 
+                    if isinstance(result, ExceptionResponse):
+                        raise self._build_non_retryable_error(
+                            response=result,
+                            action=f"read {register_type} addr={address} count={count}",
+                        )
+
                     last_error = ModbusException(str(result))
+                except NonRetryableModbusException:
+                    raise
                 except (OSError, asyncio.TimeoutError, ModbusException) as err:
                     last_error = err
 
@@ -124,7 +144,15 @@ class BWWPModbusHub:
                     if not result.isError():
                         return
 
+                    if isinstance(result, ExceptionResponse):
+                        raise self._build_non_retryable_error(
+                            response=result,
+                            action=f"write addr={address} value={write_value}",
+                        )
+
                     last_error = ModbusException(str(result))
+                except NonRetryableModbusException:
+                    raise
                 except (OSError, asyncio.TimeoutError, ModbusException) as err:
                     last_error = err
 
@@ -195,6 +223,21 @@ class BWWPModbusHub:
                 ),
                 timeout=self._request_timeout(),
             )
+
+    def _build_non_retryable_error(
+        self, response: ExceptionResponse, action: str
+    ) -> NonRetryableModbusException:
+        """Convert Modbus exception responses into explicit user-facing errors."""
+        code = int(getattr(response, "exception_code", -1))
+        label = MODBUS_EXCEPTION_LABELS.get(code, f"exception code {code}")
+        if code == 3:
+            return NonRetryableModbusException(
+                f"Device rejected value ({label}) on slave={self._slave_id}: {action}. "
+                "Check allowed range and required operating mode."
+            )
+        return NonRetryableModbusException(
+            f"Modbus protocol error ({label}) on slave={self._slave_id}: {action}"
+        )
 
 
 class BWWPSharedModbusHub:

@@ -8,6 +8,7 @@ from homeassistant.components.number import NumberEntity, NumberEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RuntimeData
@@ -124,6 +125,16 @@ class BWWPNumber(BWWPBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         rounded_value = int(round(value))
+        min_value = self.entity_description.native_min_value
+        max_value = self.entity_description.native_max_value
+        if min_value is not None and rounded_value < int(min_value):
+            raise HomeAssistantError(
+                f"Value {rounded_value} is below minimum {int(min_value)}"
+            )
+        if max_value is not None and rounded_value > int(max_value):
+            raise HomeAssistantError(
+                f"Value {rounded_value} is above maximum {int(max_value)}"
+            )
         await self._hub.async_write_register(
             address=self.entity_description.register,
             value=rounded_value,
